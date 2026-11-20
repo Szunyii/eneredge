@@ -1,8 +1,12 @@
 # Nyitott pontok az M1 után
 
 Ez a lista azt gyűjti össze, ami az M1 (váz) lezárásakor tudatosan nyitva maradt. Forrása a
-független zárófelülvizsgálat és az azt követő javítási kör, 2026-11-20-án. Az állapot az
-`m1-vaz` ág `3c5c751` commitjára vonatkozik.
+független zárófelülvizsgálat és az azt követő javítási kör, 2026-11-20-án. A pontok az `m1-vaz`
+ág `3c5c751` commitjának kódjára vonatkoznak; azóta csak dokumentum változott.
+
+Az ág pusholva van, és az 1. számú pull requestben várja a beolvasztást
+(https://github.com/Szunyii/eneredge/pull/1). A CI első futása zöld lett; a 20. pont és a nyitott
+döntések már ezt az állapotot írják le.
 
 Egyik pont sem akadálya az M1 beolvasztásának. A kritikus és a fontos hibák ki vannak javítva;
 ami itt áll, arról a tulajdonos dönt, hogy mikor és hogyan foglalkozunk vele. A „Javasolt
@@ -42,7 +46,7 @@ a kód olvasásából következik.
 | 17 | Cég létrehozásakor nincs előzetes azonosító-ellenőrzés | M1b |
 | 18 | A cégek elszigetelése megállapodás, nem kikényszerített garancia | M2 előtt eldönteni |
 | 19 | A böngészős próbák megszakításkor nem takarítanak maguk után | bármikor |
-| 20 | A CI még soha nem futott, és három beállítása hiányzik | az első pushnál |
+| 20 | A CI három beállítása hiányzik | bármikor |
 | 21 | Két beállítás nincs dokumentálva | M4 előtt |
 | 22 | A tesztek kimenete nem csendes | bármikor |
 | 23 | Egyidejű regisztráció ugyanarra a címre hibát naplóz | M8 |
@@ -237,16 +241,19 @@ Ha a `bun run e2e` futását megszakítod (Ctrl-C), a háttérben elindított sz
 eldobható adatbázis megmaradhatnak. A következő futás ilyenkor azt írja, hogy a port foglalt.
 **Teendő:** megszakításkor is leállítani és törölni (`e2e/run.ts`).
 
-### 20. A CI még soha nem futott, és három beállítása hiányzik
+### 20. A CI három beállítása hiányzik
 
-A GitHub-munkafolyamat (`.github/workflows/ci.yml`) még nem futott, mert az M1-ből semmi nincs
-pusholva. Ezen felül:
+A GitHub-munkafolyamat (`.github/workflows/ci.yml`) 2026-11-20-án futott először, az ág
+pusholása és a pull request megnyitása után. Zöld lett: minden lépése sikeres volt (lint,
+típusellenőrzés, tesztek, böngészős próbák), körülbelül 2 perc alatt. Három beállítása viszont
+hiányzik:
 
-- egy pull request ágán kétszer futna, mert a push és a pull request eseményre is indul;
+- egy pull request ágán minden push kétszer futtatja, mert a push és a pull request eseményre is
+  indul. Ezt láttam: az első pushnál két futás indult ugyanarra a commitra;
 - nincs időkorlátja, így egy beragadt futás sokáig fogyasztaná a keretet;
 - a jogosultsága nincs leszűkítve.
 
-**Teendő:** az első push után megnézni, zöld-e, és pótolni a három beállítást.
+**Teendő:** pótolni a három beállítást.
 
 ### 21. Két beállítás nincs dokumentálva
 
@@ -347,8 +354,8 @@ A regisztráció újraírásakor hozott döntések közül ezeknek van olyan kö
 
 ## D. Nyitott döntések
 
-- **Az `m1-vaz` ág sorsa:** helyben beolvasztás a `main`-be, pull request, vagy marad így. Az én
-  javaslatom a pull request, mert a CI még soha nem futott.
+- **Az 1. számú pull request beolvasztása.** Az `m1-vaz` ág pusholva van, a pull request nyitva
+  áll, ütközés nélkül beolvasztható, a CI zöld. A beolvasztásról a tulajdonos dönt.
 - **Külön felülvizsgálat a regisztráció újraírására?** Ez jelentős új, biztonsági szempontból
   érzékeny kód, amelyet a független felülvizsgáló már nem látott. Tesztek védik.
 - **A 2. pont (Origin-ellenőrzés) most vagy később?** Az élesítéstől független, kicsi változás.
