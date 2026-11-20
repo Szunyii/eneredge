@@ -1,0 +1,12 @@
+{
+  "name": "@eneredge/e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "bun check"
+  },
+  "dependencies": {
+    "@eneredge/db": "workspace:*",
+    "@eneredge/frontend": "workspace:*"
+  }
+}

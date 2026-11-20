@@ -1,0 +1,26 @@
+name: eneredge
+
+services:
+  db:
+    image: timescale/timescaledb:2.32.1-pg18
+    command: ["postgres", "-c", "timescaledb.telemetry_level=off"]
+    environment:
+      POSTGRES_USER: eneredge
+      POSTGRES_PASSWORD: eneredge
+      POSTGRES_DB: eneredge
+    ports:
+      - "127.0.0.1:54329:5432"
+    healthcheck:
+      # -h 127.0.0.1: the bootstrap server of the first start listens on the
+      # socket only, so this turns healthy only once the real server is up.
+      test: ["CMD-SHELL", "pg_isready -U eneredge -h 127.0.0.1"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    volumes:
+      # PostgreSQL 18 images keep PGDATA in /var/lib/postgresql/18/docker and
+      # declare /var/lib/postgresql as the volume.
+      - db-data:/var/lib/postgresql
+
+volumes:
+  db-data:

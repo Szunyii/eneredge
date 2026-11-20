@@ -2,7 +2,7 @@
 
 *2026-11-20 · a [`docs/eneredge-terv-v0.md`](../../eneredge-terv-v0.md) alapján, a 15. pontja szerinti sorrendben, az átnézés során egyeztetett módosításokkal. Kód addig nem készül, amíg ezt jóvá nem hagyod.*
 
-**Állapot:** az átnézés három köre lezárult, minden döntésed be van vezetve (1.4). A terv a jóváhagyásodra vár.
+**Állapot:** 2026-11-20-án jóváhagytad, az M1 épül. Az építés közben hozott döntésed (a frontend Next.js; a frontend és a backend külön mappában és külön processzben) az 1.2 és az 1.4 pontban van átvezetve.
 
 **Mit hagysz jóvá:** a mérföldkövek tartalmát és „kész, ha" feltételeit (2. rész), a rám bízott döntéseket (3. rész), a terv javaslataitól való eltéréseket (1.2), és azt, amit a gépeden elindítok hozzá (6. rész).
 
@@ -38,7 +38,9 @@ Emlékezetből nem pótolom őket. Egy fejből írt regisztertérkép éppen az 
 | 15. pont, sorrend | Élesítés a 8. mérföldkőben | Minimális élesítés az M4 elején; az M8 a megerősítés. | Pilot parkot csak nyilvános címen futó szerverhez lehet kötni, és valódi adathoz mentés kell. Jóváhagytad. |
 | 2. pont, terjedelem | Teljesítmény-összehasonlító elemzések nincsenek az MVP-ben | Egy egyszerű „termelési eltérés" jelzés bekerül az M5-be és a bemutatóba. Időjárás-alapú várt sáv és előrejelzés továbbra sincs. | A marketingoldal fő ígérete, és az első külső cél a bemutató. Jóváhagytad. |
 | 13. pont, kulcsok | A privát kulcsok titkosítva tárolva | Ezen felül: a hub privát kulcsát a poller állítja elő, az API csak a nyilvánosat látja. | Az internet felé néző process így soha nem kezel hub-kulcsot. |
+| 12. pont, repó | `apps/web` és `apps/api` | A két mappa neve `apps/frontend` és `apps/backend`, a csomagoké `@eneredge/frontend` és `@eneredge/backend`. Az `/api/*` útvonalak neve változatlan. | Döntésed (2026-11-20, az M1 lezárása után): a két rész a megszokott nevén szerepeljen. |
 | 9. pont, adatmodell | A táblák listája | A táblák abban a mérföldkőben jönnek létre, amelyik használja őket. | A mérési tábla oszlopai a kanonikus sémából jönnek, ami még nincs meg; a többinél így nem készül előre kitalált oszlop. |
+| 5. és 12. pont, frontend [D] | React a Bun bundlerével, HTML-importként a `Bun.serve` alatt, egy processzben az API-val | A frontend Next.js (`apps/frontend`), a backend a Hono API (`apps/backend`): két mappa, két process. A böngésző egy címet lát, mert a Next az `/api/*` kéréseket továbbadja az API-nak. A Next.js is Bun alatt fut; a csomagkezelő és a tesztfuttató változatlanul Bun. | Döntésed 2026-11-20-án, az M1 építése közben. Kipróbáltam: a Next.js 16.4.6 Bun alatt fejlesztői és éles módban is fut. |
 
 ### 1.3 Ellenőrzött tények
 
@@ -93,6 +95,12 @@ Emlékezetből nem pótolom őket. Egy fejből írt regisztertérkép éppen az 
 **Munkamód**
 - Az M1-et és az M1b-t egy munkamenetben építem meg, a végükön független átnézéssel; a felületet készülés közben megmutatom. Az M2-től feladatonként külön ágens és átnézés megy.
 
+**Az M1 építése közben (2026-11-20)**
+- A frontend Next.js, ugyanazzal a főverzióval, mint a marketingoldal. A frontend (`apps/frontend`) és a backend (`apps/backend`) külön mappában van, és külön processzben fut.
+- A VPS root hozzáférését és a GitHub-repót megadtad; a repó `origin` néven be van kötve.
+- A kód és a mappaszerkezet embernek is jól olvasható legyen: beszédes változó- és fájlnevek, áttekinthető tagolás.
+- A Next.js alkalmazásban shadcn/ui komponensek, a szerveradathoz TanStack Query, az űrlapokhoz TanStack Form.
+
 **Egyéb**
 - Szerepek: a `member` mindent lát, de parkot felvenni, módosítani, törölni és tagot meghívni csak az `owner` és az `admin` tud.
 - A böngészős végigpróbák `Bun.WebView`-val futnak a `bun test` alatt; ha kevésnek bizonyul, kivételt kérek a Playwrightra.
@@ -107,16 +115,16 @@ A sorrend: **M1 → P → M1b → M2 → M3 → M4 → M5 → M6 → M7 → M8.*
 **Cél:** be lehet lépni, céget létrehozni, kollégát meghívni és parkot felvenni; a felület váza megvan.
 
 **Mit építek**
-- Monorepo Bun workspace-szel: `apps/web`, `apps/api`, `packages/db`. Lint és formázás Biome-mal, típusellenőrzés `bun check`-kel, minden teszt `bun test`-tel; helyi adatbázis Compose-ból.
+- Monorepo Bun workspace-szel: `apps/frontend` (Next.js frontend), `apps/backend` (Hono backend), `packages/db`. Lint és formázás Biome-mal, típusellenőrzés `bun check`-kel, minden teszt `bun test`-tel; helyi adatbázis Compose-ból.
 - Migrációk Drizzle-lel. Az első migráció bekapcsolja a TimescaleDB-kiterjesztést, hogy a fejlesztői és a teszt-adatbázis kezdettől olyan legyen, mint az éles.
-- Auth (Better Auth): regisztráció e-mail-címmel és jelszóval, e-mail-megerősítés, jelszó-visszaállítás; szervezet, tagok, meghívás e-mailben.
+- Auth (Better Auth): regisztráció e-mail-címmel – a jelszót a felhasználó a levélben kapott linken állítja be, ami egyben az e-mail-cím megerősítése –, jelszó-visszaállítás; szervezet, tagok, meghívás e-mailben. *(Az M1 zárófelülvizsgálata után módosítva: eredetileg a regisztráció kérte a jelszót, és külön megerősítő levél ment. Így viszont más címével előre regisztrálva a fiók elfoglalható lett volna.)*
 - Két regisztrációs mód: nyílt, illetve meghívásos, amelyben csak az engedélyezett címek, a meghívottak és a platform-admin regisztrálhatnak.
 - A bérlő-elszigetelés közös rétege, park CRUD cégenkénti parkkorláttal, audit napló.
 - A felület váza magyarul, kiszervezett szövegekkel, az `emil-design-eng` skillel: belépés és regisztráció, cég létrehozása, Parkok, Park, Beállítások (cég, tagok, meghívók), üres Jelzések oldal, és az Admin oldal első két funkciója (engedélyezett regisztrációs címek, cégenkénti parkkorlát).
 
 **Kész, ha**
 - Tesztek igazolják: más cég parkjára minden kérés 404; a tag (`member`) nem módosíthat; az eltávolított tag a következő kérésnél már nem fér hozzá; a park-műveletek audit sort írnak; hibás bemenetre 4xx jön, nem 500; meghívásos módban ismeretlen cím nem regisztrálhat; a 11. park csak emelt korláttal vehető fel.
-- Böngészős végigpróba zöld: regisztráció → e-mail-megerősítés → cég → park felvétele → kolléga meghívása és belépése, csak a felületről.
+- Böngészős végigpróba zöld: regisztráció → jelszó beállítása a levélben kapott linken → cég → park felvétele → kolléga meghívása és belépése, csak a felületről.
 
 **Kell hozzá:** tőled semmi a jóváhagyáson túl. Fejlesztés közben valódi e-mail nem megy ki, a levelek a konzolra íródnak.
 
@@ -179,7 +187,7 @@ A próba kódja nem kerül a termékbe; a tanulsága igen. A próba után a VPS-
 **Cél:** a beolvasott adat másodperceken belül látszik a felületen.
 
 **Mit építek**
-- NOTIFY → az API LISTEN-je → SSE a böngészőnek, életjel-üzenettel és kérésenként kikapcsolt tétlenségi időkorláttal; kapcsolatszakadás után felzárkózás.
+- NOTIFY → az API LISTEN-je → SSE a böngészőnek, életjel-üzenettel és kérésenként kikapcsolt tétlenségi időkorláttal; kapcsolatszakadás után felzárkózás. Az SSE-kapcsolat élesben a Caddy-n át közvetlenül az API-hoz megy; fejlesztésben a Next továbbítóján át, amit az M3 elején külön kipróbálok (a továbbító nem tarthatja vissza az üzeneteket).
 - 1 perces folyamatos aggregátum; idősor-végpont szerveroldali ritkítással (rövid távra nyers adat, hosszabbra az aggregátum).
 - A Parkok, a Park és az Inverter képernyő az M1b-ben elkészült; itt a valódi adat kerül mögéjük, és megjelenik a lekérdezés állapota a ténylegesen elért ütemmel.
 - A napi energia az energiaszámlálóból jön, nem a teljesítmény összegzéséből, így egy adatkiesés nem hamisítja meg. A grafikon a hiányt hiánynak mutatja.
@@ -199,7 +207,7 @@ A próba kódja nem kerül a termékbe; a tanulsága igen. A próba után a VPS-
 **Cél:** egy park a varázslóból, a szerveren végzett kézi lépés nélkül beköthető, és a parkok egymástól el vannak szigetelve.
 
 **Mit építek**
-- **Először a minimális élesítés** a Hostinger VPS-en: Compose (adatbázis, migráció, web + api, poller), Caddy TLS-sel az `app.eneredge.tech` címen, tűzfal (a Hostinger tűzfalán a tunnelek UDP porttartománya nyitva), napi mentés egy Hostingertől független tárhelyre, külső figyelő a `/api/health`-re. A levelek a `no-reply@eneredge.tech` postafiókon át mennek. A router-konfig végpontja a `hub.eneredge.tech`. A hub-kulcsok titkosító kulcsa az adatbázis-mentéstől külön van mentve. A kitett rendszer meghívásos módban fut az M7-ig.
+- **Először a minimális élesítés** a Hostinger VPS-en: Compose (adatbázis, migráció, web, api, poller), Caddy TLS-sel az `app.eneredge.tech` címen (az `/api/*` kéréseket az API-hoz, a többit a Next.js-hez irányítja), tűzfal (a Hostinger tűzfalán a tunnelek UDP porttartománya nyitva), napi mentés egy Hostingertől független tárhelyre, külső figyelő a `/api/health`-re. A levelek a `no-reply@eneredge.tech` postafiókon át mennek. A router-konfig végpontja a `hub.eneredge.tech`. A hub-kulcsok titkosító kulcsa az adatbázis-mentéstől külön van mentve. A kitett rendszer meghívásos módban fut az M7-ig. *(Az M1 zárófelülvizsgálatából:)* a nyilvános címre kerüléssel együtt jár a kéréskorlátozás a belépés, a jelszókérés és a regisztráció útvonalain – a saját `/api/account/sign-up` útvonalon is, amelyet a Better Auth beépített korlátja nem véd –, a látogató valódi IP-címének megbízható továbbítása a Caddy-től az API-ig, a biztonsági fejlécek, és az, hogy az API csak a helyi gépen figyeljen.
 - A teljes elszigetelés-teszt valódi WireGuard-interfészekkel, a P próba tanulságai alapján.
 - Tunnel-kezelés a pollerben: a `tunnel` tábla a kívánt állapot, a poller induláskor és változáskor ehhez igazítja az interfészeket, útvonalakat és tűzfalszabályokat; visszaírja az utolsó kézfogást, a forgalmat és a park routerének nyilvános címét.
 - Kulcsok: a hub privát kulcsát a poller állítja elő és titkosítva tárolja [J→]. A router privát kulcsa letöltéskor keletkezik és nem tárolódik; újabb letöltés csak új kulccsal lehetséges, a régi érvényét veszti.
@@ -298,14 +306,14 @@ A próba kódja nem kerül a termékbe; a tanulsága igen. A próba után a VPS-
 
 | Terület | Döntés | Indok |
 |---|---|---|
-| Verziók | Bun 1.4.5 · Hono 4.13 · Drizzle 0.45 · Better Auth 1.7.26 · Zod 4 · React 19 · React Router 8 · TanStack Query 5 · Tailwind 4 · uPlot 1.6 · PostgreSQL 18 + TimescaleDB 2.32.1 | A mai stabil kiadások; a pontos verziót a lockfile rögzíti. |
+| Verziók | Bun 1.4.5 · Hono 4.13 · Drizzle 0.45 · Better Auth 1.7.26 · Zod 4 · React 19 · Next.js 16 · TanStack Query 5 · Tailwind 4 · uPlot 1.6 · PostgreSQL 18 + TimescaleDB 2.32.1 | A mai stabil kiadások; a pontos verziót a lockfile rögzíti. |
 | Azonosítók | uuidv7 a parknál, eszköznél, eseménynél | Időrendben rendezhető, és az URL-ből nem derül ki, hány park van a rendszerben. |
 | URL-ek | `/o/<cég>/parks/<park>` | A megosztott link attól függetlenül működik, melyik cég van éppen kiválasztva. |
-| Belépés | e-mail + jelszó (legalább 10 karakter), kötelező e-mail-megerősítés | Külső szolgáltató nélkül működik. |
+| Belépés | e-mail + jelszó (legalább 10 karakter); a jelszó csak a levélben kapott, 24 óráig érvényes linken állítható be, ez egyben a cím megerősítése | Külső szolgáltató nélkül működik, és más címével regisztrálni semmit nem ér. |
 | Platform-admin | a beállításban felsorolt, megerősített e-mail-címek | Kevés feladata van (profilok jóváhagyása, regisztráció engedélyezése, parkkorlát), ehhez nem kell felhasználókezelő felület. |
 | Hibák | az API hibakódot ad, a magyar szöveg a felület szótárában van | Minden szöveg egy helyen van, és később fordítható. |
 | Tunnel-kiosztás | N a legkisebb szabad sorszám; port 51820+N; hub cím = tartomány + 2N, router cím = tartomány + 2N+1; routing tábla 1000+N | Megegyezik a terved példájával: N=7 → 51827, 10.203.0.14, 1007. |
-| Felület | React Router, TanStack Query, típusos API-kliens; a marketingoldal színei és betűtípusa | Egy fejlesztő által ismert, elterjedt eszközök. |
+| Felület | Next.js (App Router), shadcn/ui komponensek, TanStack Query a szerveradathoz és TanStack Form az űrlapokhoz [D]; mellette típusos API-kliens; a marketingoldal színei és betűtípusa | A Next.js a te döntésed. A felület az adatot kizárólag az API-n át éri el, a backendből csak típust importál – így a két rész tisztán elválik. |
 
 ## 4. A „kudarc lenne akkor is" pontok őrei
 
@@ -337,6 +345,7 @@ A próba kódja nem kerül a termékbe; a tanulsága igen. A próba után a VPS-
 - **A gépeden a jóváhagyás után:** `bun upgrade` 1.4.5-re; a Docker Desktop elindítása és a TimescaleDB-kép letöltése; `bun install` a projektmappában. A böngészős próbához nem kell külön böngészőt telepíteni. Az ananasar nem kerül erre a gépre.
 - **A VPS-en:** ami WireGuardot érint (a P próba és az M4), és az élesítés. Ezen a gépen WireGuard nem fut.
 - **Felület:** UI-munka előtt betöltöm az `emil-design-eng` skillt.
+- **Olvashatóság [D]:** a kód és a mappaszerkezet embernek is jól olvasható: kiírt, beszédes nevek rövidítések helyett; egy fájl egy felelősség; szerep szerint tagolt mappák, amelyeket a README leír; rövid függvények; megjegyzés ott, ahol a miért nem látszik a kódból. Az átnézések ezt külön szempontként ellenőrzik.
 - **Megállási pontok:** minden mérföldkő végén megmutatom, mi készült és mit mutatnak a tesztek, és jóváhagyatom a következő részletes tervét. A [D] döntésekhez kérdezés nélkül nem nyúlok; ha egy [J] javaslattól el kell térnem, jelzem, mielőtt megteszem.
 - **Titkok:** `.env` fájlban, ami nem kerül a repóba; mellette `.env.example` minta.
 

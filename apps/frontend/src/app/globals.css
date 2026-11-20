@@ -1,0 +1,184 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ------------------------------------------------------------------ */
+/* Tokens                                                              */
+/* The palette of the marketing site (eneredge.tech), so the two read  */
+/* as one product. Colour means attention: neutrals carry the          */
+/* structure, sun marks energy and the main action, orange marks a     */
+/* production deviation, violet marks data-link trouble.               */
+/* ------------------------------------------------------------------ */
+
+@theme {
+  /* Cell ink: the blue-black of monocrystalline PV cells */
+  --color-ink: #131c2e;
+  --color-ink-soft: #3b4659;
+  /* Called "muted" on the marketing site; shadcn/ui owns that name here. */
+  --color-ink-muted: #5a6477;
+  --color-faint: #8b94a5;
+  --color-line: #d3d9e1;
+  --color-line-soft: #e1e5eb;
+
+  /* Aluminium: the cool frame metal around every module */
+  --color-alu: #edf0f3;
+  --color-alu-deep: #e3e7ec;
+  --color-sheet: #fbfcfd;
+
+  /* Energy */
+  --color-sun: #ffc629;
+  --color-sun-hover: #ffd352;
+  --color-sun-soft: #fff2c7;
+  --color-sun-ink: #7a5700;
+
+  /* Production deviation */
+  --color-deviation: #f26b1d;
+  --color-deviation-soft: #fde6d8;
+  --color-deviation-ink: #a3410a;
+
+  /* Data-link trouble */
+  --color-datalink: #6c5ce7;
+  --color-datalink-soft: #ebe8fd;
+  --color-datalink-ink: #4a3ac4;
+
+  /* Motion: strong curves, so even a short transition reads as intended. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* shadcn/ui components speak in roles (background, primary, muted…). */
+/* Each role points at a brand token, so they need no palette of their own. */
+@theme inline {
+  --color-background: var(--color-alu);
+  --color-foreground: var(--color-ink);
+  --color-card: var(--color-sheet);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-sheet);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-sun);
+  --color-primary-foreground: var(--color-ink);
+  --color-secondary: color-mix(in oklab, var(--color-ink) 8%, transparent);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-alu-deep);
+  --color-muted-foreground: var(--color-ink-muted);
+  --color-accent: var(--color-alu);
+  --color-accent-foreground: var(--color-ink);
+  --color-destructive: var(--color-deviation-ink);
+  --color-border: var(--color-line);
+  --color-input: var(--color-line);
+  --color-ring: var(--color-ink);
+}
+
+/* ------------------------------------------------------------------ */
+/* Type                                                                */
+/* Archivo's width axis does the work: headings are a little wider and */
+/* heavier, running text is normal width. Numbers are always tabular.  */
+/* ------------------------------------------------------------------ */
+
+/* The name of a page. */
+@utility type-title {
+  font-size: clamp(1.5rem, 1.3rem + 0.9vw, 1.875rem);
+  line-height: 1.1;
+  letter-spacing: -0.028em;
+  font-weight: 660;
+  font-stretch: 108%;
+  text-wrap: balance;
+}
+
+/* A section inside a page. */
+@utility type-heading {
+  font-size: 1.125rem;
+  line-height: 1.25;
+  letter-spacing: -0.018em;
+  font-weight: 650;
+  font-stretch: 106%;
+}
+
+/* The sentence under a title that says what the page is for. */
+@utility type-lead {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------------ */
+/* Motion                                                              */
+/* ------------------------------------------------------------------ */
+
+/* Anything pressable answers the press: a quick, subtle squeeze. */
+@utility press {
+  /* The outline lines keep the focus ring's settle-in from the base layer. */
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    text-decoration-color 200ms ease,
+    outline-offset 200ms var(--ease-out),
+    outline-color 200ms ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:active {
+      transform: none;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    background-color: var(--color-alu);
+    color: var(--color-ink);
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    min-height: 100dvh;
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    font-variant-numeric: tabular-nums;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-sun);
+    color: var(--color-ink);
+  }
+
+  /* The focus ring settles in from 6px to 2px instead of just appearing. */
+  :where(a, button, summary, [role="tab"], [tabindex]) {
+    outline: 2px solid transparent;
+    outline-offset: 6px;
+    transition:
+      outline-offset 200ms var(--ease-out),
+      outline-color 200ms ease;
+  }
+
+  :where(a, button, summary, [role="tab"], [tabindex]):focus-visible {
+    outline-color: var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :where(a, button, summary, [role="tab"], [tabindex]) {
+      transition: none;
+    }
+  }
+}
