@@ -7,6 +7,9 @@ Ez a repó a platform. A terv és a mérföldkövek a [`docs/`](docs/) mappában
 [a tulajdonos terve](docs/eneredge-terv-v0.md) és
 [a megvalósítási terv](docs/superpowers/plans/2026-11-20-eneredge-mvp-megvalositasi-terv.md).
 
+Ami az első mérföldkő után tudatosan nyitva maradt, az a
+[nyitott pontok listájában](docs/nyitott-pontok.md) van.
+
 ## Előfeltételek
 
 - [Bun](https://bun.com) 1.4.5 – a pontos verzió a [`.bun-version`](.bun-version) fájlban van.
