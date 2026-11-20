@@ -1,4 +1,4 @@
-import type { ParkStatus } from "@eneredge/api";
+import type { ParkStatus } from "@eneredge/backend";
 import { cn } from "cn";
 import { hu } from "@/i18n/hu";
 

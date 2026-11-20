@@ -1,6 +1,6 @@
 "use client";
 
-import type { Me } from "@eneredge/api";
+import type { Me } from "@eneredge/backend";
 import { useRouter } from "next/navigation";
 import { createContext, type ReactNode, use, useEffect } from "react";
 import { AuthCard, AuthFrame } from "@/components/auth-layout";

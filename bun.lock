@@ -10,8 +10,8 @@
         "typescript": "^7",
       },
     },
-    "apps/api": {
-      "name": "@eneredge/api",
+    "apps/backend": {
+      "name": "@eneredge/backend",
       "dependencies": {
         "@better-auth/drizzle-adapter": "1.7.26",
         "@eneredge/db": "workspace:*",
@@ -26,8 +26,8 @@
         "@types/nodemailer": "^8.0.2",
       },
     },
-    "apps/web": {
-      "name": "@eneredge/web",
+    "apps/frontend": {
+      "name": "@eneredge/frontend",
       "dependencies": {
         "@fontsource-variable/archivo": "^5.3.0",
         "@tanstack/react-form": "^1.33.5",
@@ -47,7 +47,7 @@
         "zod": "^4.6.7",
       },
       "devDependencies": {
-        "@eneredge/api": "workspace:*",
+        "@eneredge/backend": "workspace:*",
         "@tailwindcss/postcss": "^4.3.5",
         "@types/node": "^26.6.6",
         "@types/react": "^19.3.0",
@@ -58,7 +58,7 @@
       "name": "@eneredge/e2e",
       "dependencies": {
         "@eneredge/db": "workspace:*",
-        "@eneredge/web": "workspace:*",
+        "@eneredge/frontend": "workspace:*",
       },
     },
     "packages/db": {
@@ -118,13 +118,13 @@
 
     "@emnapi/runtime": ["@emnapi/runtime@1.11.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA=="],
 
-    "@eneredge/api": ["@eneredge/api@workspace:apps/api"],
+    "@eneredge/backend": ["@eneredge/backend@workspace:apps/backend"],
 
     "@eneredge/db": ["@eneredge/db@workspace:packages/db"],
 
     "@eneredge/e2e": ["@eneredge/e2e@workspace:e2e"],
 
-    "@eneredge/web": ["@eneredge/web@workspace:apps/web"],
+    "@eneredge/frontend": ["@eneredge/frontend@workspace:apps/frontend"],
 
     "@esbuild-kit/core-utils": ["@esbuild-kit/core-utils@3.3.2", "", { "dependencies": { "esbuild": "~0.18.20", "source-map-support": "^0.5.21" } }, "sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ=="],
 

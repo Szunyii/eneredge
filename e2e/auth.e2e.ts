@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { hu } from "@eneredge/web/hu";
+import { hu } from "@eneredge/frontend/hu";
 import {
   askForAccount,
   createOrganization,

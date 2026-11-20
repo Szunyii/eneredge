@@ -1,4 +1,4 @@
-import type { ApiErrorBody, ApiErrorCode, FieldErrorCode } from "@eneredge/api";
+import type { ApiErrorBody, ApiErrorCode, FieldErrorCode } from "@eneredge/backend";
 import { hu } from "@/i18n/hu";
 
 /** A refusal from the backend: a code, and for faulty input one code per field. */

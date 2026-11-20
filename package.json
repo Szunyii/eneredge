@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "bun run --parallel --filter './apps/*' dev",
-    "build": "bun run --filter @eneredge/web build",
+    "build": "bun run --filter @eneredge/frontend build",
     "start": "bun run --parallel --filter './apps/*' start",
     "test": "bun test",
     "e2e": "bun e2e/run.ts",

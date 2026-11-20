@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { hu } from "@eneredge/web/hu";
+import { hu } from "@eneredge/frontend/hu";
 
 // Plain requests against the running system: what the web origin serves,
 // and that the API is reachable through it.

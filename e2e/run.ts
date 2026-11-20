@@ -1,10 +1,10 @@
 /**
  * Brings the whole system up for the end-to-end tests and runs them:
- * a throwaway database, the API and the built web app, then `bun test` on e2e/*.e2e.ts.
+ * a throwaway database, the backend and the built frontend, then `bun test` on e2e/*.e2e.ts.
  *
  *   bun run e2e                 every test file
  *   bun run e2e auth            only files whose name contains "auth"
- *   E2E_SKIP_BUILD=1 bun run e2e   reuse the last web build (when only tests changed)
+ *   E2E_SKIP_BUILD=1 bun run e2e   reuse the last frontend build (when only tests changed)
  */
 import { mkdtemp, rm } from "node:fs/promises";
 import { connect } from "node:net";
@@ -13,13 +13,13 @@ import { join } from "node:path";
 import { createTestDatabase } from "@eneredge/db/testing";
 
 const root = join(import.meta.dir, "..");
-const apiDir = join(root, "apps/api");
-const webDir = join(root, "apps/web");
+const backendDir = join(root, "apps/backend");
+const frontendDir = join(root, "apps/frontend");
 
-const WEB_PORT = 3100;
-const API_PORT = 3101;
-const baseUrl = `http://localhost:${WEB_PORT}`;
-const apiUrl = `http://localhost:${API_PORT}`;
+const FRONTEND_PORT = 3100;
+const BACKEND_PORT = 3101;
+const baseUrl = `http://localhost:${FRONTEND_PORT}`;
+const backendUrl = `http://localhost:${BACKEND_PORT}`;
 /** The one address that is a platform admin in the system under test. */
 const ADMIN_EMAIL = "admin@e2e.eneredge.test";
 
@@ -40,7 +40,7 @@ async function main(): Promise<number> {
     console.error("No e2e test file matches.");
     return 1;
   }
-  for (const port of [WEB_PORT, API_PORT]) {
+  for (const port of [FRONTEND_PORT, BACKEND_PORT]) {
     if (await isListening(port)) {
       console.error(`Port ${port} is in use. Stop whatever listens there and run again.`);
       return 1;
@@ -54,9 +54,9 @@ async function main(): Promise<number> {
 
   try {
     if (process.env.E2E_SKIP_BUILD !== "1") {
-      console.log("Building the web app…");
+      console.log("Building the frontend…");
       const build = Bun.spawn([bun, "--bun", "next", "build"], {
-        cwd: webDir,
+        cwd: frontendDir,
         env: cleanEnv,
         stdout: Bun.file(join(workDir, "build.log")),
         stderr: Bun.file(join(workDir, "build.log")),
@@ -68,10 +68,10 @@ async function main(): Promise<number> {
     }
 
     children.push(
-      start("api", workDir, [bun, "src/index.ts"], apiDir, {
+      start("backend", workDir, [bun, "src/index.ts"], backendDir, {
         ...cleanEnv,
         NODE_ENV: "test",
-        PORT: String(API_PORT),
+        PORT: String(BACKEND_PORT),
         APP_URL: baseUrl,
         DATABASE_URL: database.url,
         AUTH_SECRET: "e2e-secret-that-is-long-enough-0123456789",
@@ -81,13 +81,19 @@ async function main(): Promise<number> {
         PLATFORM_ADMIN_EMAILS: ADMIN_EMAIL,
         SIGNUP_MODE: "open",
       }),
-      start("web", workDir, [bun, "--bun", "next", "start", "-p", String(WEB_PORT)], webDir, {
-        ...cleanEnv,
-        API_ORIGIN: apiUrl,
-      }),
+      start(
+        "frontend",
+        workDir,
+        [bun, "--bun", "next", "start", "-p", String(FRONTEND_PORT)],
+        frontendDir,
+        {
+          ...cleanEnv,
+          API_ORIGIN: backendUrl,
+        },
+      ),
     );
 
-    // One request proves the web app, its /api forwarding, the API and the database.
+    // One request proves the frontend, its /api forwarding, the backend and the database.
     if (!(await waitForHealth(children))) {
       for (const child of children) {
         console.error(`--- ${child.name} ---\n${await tail(child.logFile)}`);

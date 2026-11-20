@@ -1,4 +1,4 @@
-import type { ParkDto } from "@eneredge/api";
+import type { ParkDto } from "@eneredge/backend";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { apiErrorFrom } from "@/lib/api-error";

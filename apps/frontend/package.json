@@ -1,5 +1,5 @@
 {
-  "name": "@eneredge/web",
+  "name": "@eneredge/frontend",
   "private": true,
   "type": "module",
   "exports": {
@@ -30,7 +30,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@eneredge/api": "workspace:*",
+    "@eneredge/backend": "workspace:*",
     "@tailwindcss/postcss": "^4.3.5",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",

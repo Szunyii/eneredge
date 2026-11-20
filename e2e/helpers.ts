@@ -1,6 +1,6 @@
 /** What a person does again and again in the tests: signing up, reading mail, creating a company. */
 import { randomUUID } from "node:crypto";
-import { hu } from "@eneredge/web/hu";
+import { hu } from "@eneredge/frontend/hu";
 import { openPage, type Page } from "./browser.ts";
 
 /**

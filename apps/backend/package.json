@@ -1,5 +1,5 @@
 {
-  "name": "@eneredge/api",
+  "name": "@eneredge/backend",
   "private": true,
   "type": "module",
   "exports": {

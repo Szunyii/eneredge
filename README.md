@@ -27,15 +27,15 @@ Ezután a böngészőben: <http://localhost:3000>.
 
 ## Két futó rész
 
-| Rész     | Mappa                  | Mi ez                                        | Port |
-| -------- | ---------------------- | -------------------------------------------- | ---- |
-| Frontend | [`apps/web`](apps/web) | Next.js alkalmazás – ezt látja a felhasználó | 3000 |
-| Backend  | [`apps/api`](apps/api) | Hono API – belépés, cégek, parkok            | 3001 |
+| Rész     | Mappa                            | Mi ez                                        | Port |
+| -------- | -------------------------------- | -------------------------------------------- | ---- |
+| Frontend | [`apps/frontend`](apps/frontend) | Next.js alkalmazás – ezt látja a felhasználó | 3000 |
+| Backend  | [`apps/backend`](apps/backend)   | Hono API – belépés, cégek, parkok            | 3001 |
 
 A böngésző **csak a frontend címét** használja. Az `/api/*` kéréseket a frontend adja tovább a
-backendnek ([`apps/web/src/proxy.ts`](apps/web/src/proxy.ts)), így a kettő kívülről egy címnek
+backendnek ([`apps/frontend/src/proxy.ts`](apps/frontend/src/proxy.ts)), így a kettő kívülről egy címnek
 látszik. A frontend a backendből csak típusokat vesz át
-([`apps/api/src/contract.ts`](apps/api/src/contract.ts)); adathoz kizárólag az API-n át jut.
+([`apps/backend/src/contract.ts`](apps/backend/src/contract.ts)); adathoz kizárólag az API-n át jut.
 
 ## Levelek fejlesztés közben
 
@@ -43,10 +43,10 @@ Fejlesztés közben valódi e-mail nem megy ki. A levelek annak a terminálnak a
 meg, ahol a `bun dev` fut, a backend soraiban:
 
 ```
-@eneredge/api:dev | --- mail to te@example.com ---
-@eneredge/api:dev | Subject: Fejezd be a regisztrációt az EnerEdge-en
-@eneredge/api:dev | …
-@eneredge/api:dev | http://localhost:3000/reset-password?token=…&email=te%40example.com&welcome=1
+@eneredge/backend:dev | --- mail to te@example.com ---
+@eneredge/backend:dev | Subject: Fejezd be a regisztrációt az EnerEdge-en
+@eneredge/backend:dev | …
+@eneredge/backend:dev | http://localhost:3000/reset-password?token=…&email=te%40example.com&welcome=1
 ```
 
 Regisztráció után innen másold ki a linket a böngészőbe: azon az oldalon állítod be a jelszavad,
@@ -82,7 +82,7 @@ A végigpróbákhoz hasznos:
 
 ```
 apps/
-  api/                 backend: Hono API (Bun)
+  backend/             Hono API (Bun)
     src/index.ts         belépési pont
     src/app.ts           az összes útvonal egy helyen
     src/contract.ts      amit a frontend láthat a backendből: csak típusok
@@ -90,7 +90,7 @@ apps/
     src/routes/          egy fájl = egy útvonalcsoport (health, config, account, me, parks, admin)
     src/middleware/      munkamenet- és cégtagság-ellenőrzés
     test/                API-tesztek; a test/support/ a közös segédfüggvényeiké
-  web/                 frontend: Next.js (App Router)
+  frontend/            Next.js (App Router)
     src/app/             az oldalak; a mappák neve az oldal címe
     src/components/      saját komponensek
     src/components/ui/   shadcn/ui komponensek (a shadcn CLI-vel felvéve)
@@ -119,10 +119,10 @@ docs/                  a terv és a megvalósítási tervek
 - **Regisztráció:** a regisztráció nem állít be jelszót. A megadott címre egy link megy
   (24 óráig érvényes, egyszer használható), és aki megnyitja, az állítja be a jelszót – más címével
   regisztrálni így semmit nem ér. A válasz minden címre ugyanaz, ezért kívülről nem derül ki, kinek
-  van fiókja vagy meghívója ([`apps/api/src/routes/account.ts`](apps/api/src/routes/account.ts)).
+  van fiókja vagy meghívója ([`apps/backend/src/routes/account.ts`](apps/backend/src/routes/account.ts)).
 - **Szóhasználat:** a felületen „cég”; a kódban ugyanez `organization` (a Better Auth táblái és
   végpontjai miatt), röviden `org`, a felülethez közeli nevekben `company`.
-- **Szövegek:** a felület minden szövege az [`apps/web/src/i18n/hu.ts`](apps/web/src/i18n/hu.ts)
+- **Szövegek:** a felület minden szövege az [`apps/frontend/src/i18n/hu.ts`](apps/frontend/src/i18n/hu.ts)
   fájlban van; az API hibakódot ad, nem szöveget.
 - **Felület:** shadcn/ui komponensek, a szerveradat TanStack Queryvel, az űrlapok TanStack Formmal.
   Egy űrlap az `onSubmit`-ban küldi el a kérést; ha a szerver elutasítja, a `showRefusal` teszi ki
@@ -137,4 +137,4 @@ docs/                  a terv és a megvalósítási tervek
   telepített csomagokat.
 - A Next.js is Bun alatt fut (`bun --bun next …`), Node.js-re nincs szükség.
 - A belépés tábláit a Better Auth CLI generálja; a parancs az
-  [`apps/api/auth.cli.ts`](apps/api/auth.cli.ts) elején áll.
+  [`apps/backend/auth.cli.ts`](apps/backend/auth.cli.ts) elején áll.

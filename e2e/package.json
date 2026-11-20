@@ -7,6 +7,6 @@
   },
   "dependencies": {
     "@eneredge/db": "workspace:*",
-    "@eneredge/web": "workspace:*"
+    "@eneredge/frontend": "workspace:*"
   }
 }

@@ -1,4 +1,4 @@
-import type { PublicConfig } from "@eneredge/api";
+import type { PublicConfig } from "@eneredge/backend";
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { apiErrorFrom } from "@/lib/api-error";

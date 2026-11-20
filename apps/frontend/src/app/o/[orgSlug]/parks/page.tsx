@@ -1,6 +1,6 @@
 "use client";
 
-import type { ParkDto } from "@eneredge/api";
+import type { ParkDto } from "@eneredge/backend";
 import Link from "next/link";
 import { LoadError } from "@/components/load-error";
 import { useCurrentOrganization } from "@/components/organization-gate";

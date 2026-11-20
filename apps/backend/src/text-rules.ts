@@ -41,7 +41,7 @@ const PLACEHOLDER_ORIGIN = "https://app.invalid";
 /**
  * Whether a text is the address of a page inside the web app ("/o/acme/parks"),
  * safe to put into a link: it cannot lead to another site. The web app applies
- * the same rule to where it navigates (apps/web/src/lib/navigation.ts).
+ * the same rule to where it navigates (apps/frontend/src/lib/navigation.ts).
  */
 export function isLocalPath(text: string): boolean {
   // "//host" names another site; browsers read a backslash as a slash and drop

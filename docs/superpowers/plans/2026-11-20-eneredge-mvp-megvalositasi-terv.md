@@ -38,8 +38,9 @@ Emlékezetből nem pótolom őket. Egy fejből írt regisztertérkép éppen az 
 | 15. pont, sorrend | Élesítés a 8. mérföldkőben | Minimális élesítés az M4 elején; az M8 a megerősítés. | Pilot parkot csak nyilvános címen futó szerverhez lehet kötni, és valódi adathoz mentés kell. Jóváhagytad. |
 | 2. pont, terjedelem | Teljesítmény-összehasonlító elemzések nincsenek az MVP-ben | Egy egyszerű „termelési eltérés" jelzés bekerül az M5-be és a bemutatóba. Időjárás-alapú várt sáv és előrejelzés továbbra sincs. | A marketingoldal fő ígérete, és az első külső cél a bemutató. Jóváhagytad. |
 | 13. pont, kulcsok | A privát kulcsok titkosítva tárolva | Ezen felül: a hub privát kulcsát a poller állítja elő, az API csak a nyilvánosat látja. | Az internet felé néző process így soha nem kezel hub-kulcsot. |
+| 12. pont, repó | `apps/web` és `apps/api` | A két mappa neve `apps/frontend` és `apps/backend`, a csomagoké `@eneredge/frontend` és `@eneredge/backend`. Az `/api/*` útvonalak neve változatlan. | Döntésed (2026-11-20, az M1 lezárása után): a két rész a megszokott nevén szerepeljen. |
 | 9. pont, adatmodell | A táblák listája | A táblák abban a mérföldkőben jönnek létre, amelyik használja őket. | A mérési tábla oszlopai a kanonikus sémából jönnek, ami még nincs meg; a többinél így nem készül előre kitalált oszlop. |
-| 5. és 12. pont, frontend [D] | React a Bun bundlerével, HTML-importként a `Bun.serve` alatt, egy processzben az API-val | A frontend Next.js (`apps/web`), a backend a Hono API (`apps/api`): két mappa, két process. A böngésző egy címet lát, mert a Next az `/api/*` kéréseket továbbadja az API-nak. A Next.js is Bun alatt fut; a csomagkezelő és a tesztfuttató változatlanul Bun. | Döntésed 2026-11-20-án, az M1 építése közben. Kipróbáltam: a Next.js 16.4.6 Bun alatt fejlesztői és éles módban is fut. |
+| 5. és 12. pont, frontend [D] | React a Bun bundlerével, HTML-importként a `Bun.serve` alatt, egy processzben az API-val | A frontend Next.js (`apps/frontend`), a backend a Hono API (`apps/backend`): két mappa, két process. A böngésző egy címet lát, mert a Next az `/api/*` kéréseket továbbadja az API-nak. A Next.js is Bun alatt fut; a csomagkezelő és a tesztfuttató változatlanul Bun. | Döntésed 2026-11-20-án, az M1 építése közben. Kipróbáltam: a Next.js 16.4.6 Bun alatt fejlesztői és éles módban is fut. |
 
 ### 1.3 Ellenőrzött tények
 
@@ -95,7 +96,7 @@ Emlékezetből nem pótolom őket. Egy fejből írt regisztertérkép éppen az 
 - Az M1-et és az M1b-t egy munkamenetben építem meg, a végükön független átnézéssel; a felületet készülés közben megmutatom. Az M2-től feladatonként külön ágens és átnézés megy.
 
 **Az M1 építése közben (2026-11-20)**
-- A frontend Next.js, ugyanazzal a főverzióval, mint a marketingoldal. A frontend (`apps/web`) és a backend (`apps/api`) külön mappában van, és külön processzben fut.
+- A frontend Next.js, ugyanazzal a főverzióval, mint a marketingoldal. A frontend (`apps/frontend`) és a backend (`apps/backend`) külön mappában van, és külön processzben fut.
 - A VPS root hozzáférését és a GitHub-repót megadtad; a repó `origin` néven be van kötve.
 - A kód és a mappaszerkezet embernek is jól olvasható legyen: beszédes változó- és fájlnevek, áttekinthető tagolás.
 - A Next.js alkalmazásban shadcn/ui komponensek, a szerveradathoz TanStack Query, az űrlapokhoz TanStack Form.
@@ -114,7 +115,7 @@ A sorrend: **M1 → P → M1b → M2 → M3 → M4 → M5 → M6 → M7 → M8.*
 **Cél:** be lehet lépni, céget létrehozni, kollégát meghívni és parkot felvenni; a felület váza megvan.
 
 **Mit építek**
-- Monorepo Bun workspace-szel: `apps/web` (Next.js frontend), `apps/api` (Hono backend), `packages/db`. Lint és formázás Biome-mal, típusellenőrzés `bun check`-kel, minden teszt `bun test`-tel; helyi adatbázis Compose-ból.
+- Monorepo Bun workspace-szel: `apps/frontend` (Next.js frontend), `apps/backend` (Hono backend), `packages/db`. Lint és formázás Biome-mal, típusellenőrzés `bun check`-kel, minden teszt `bun test`-tel; helyi adatbázis Compose-ból.
 - Migrációk Drizzle-lel. Az első migráció bekapcsolja a TimescaleDB-kiterjesztést, hogy a fejlesztői és a teszt-adatbázis kezdettől olyan legyen, mint az éles.
 - Auth (Better Auth): regisztráció e-mail-címmel – a jelszót a felhasználó a levélben kapott linken állítja be, ami egyben az e-mail-cím megerősítése –, jelszó-visszaállítás; szervezet, tagok, meghívás e-mailben. *(Az M1 zárófelülvizsgálata után módosítva: eredetileg a regisztráció kérte a jelszót, és külön megerősítő levél ment. Így viszont más címével előre regisztrálva a fiók elfoglalható lett volna.)*
 - Két regisztrációs mód: nyílt, illetve meghívásos, amelyben csak az engedélyezett címek, a meghívottak és a platform-admin regisztrálhatnak.

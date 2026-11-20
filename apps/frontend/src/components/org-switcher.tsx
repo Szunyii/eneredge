@@ -1,6 +1,6 @@
 "use client";
 
-import type { Me } from "@eneredge/api";
+import type { Me } from "@eneredge/backend";
 import { ChevronsUpDownIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

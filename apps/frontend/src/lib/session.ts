@@ -1,4 +1,4 @@
-import type { Me } from "@eneredge/api";
+import type { Me } from "@eneredge/backend";
 import { type QueryClient, type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { apiErrorFrom } from "@/lib/api-error";

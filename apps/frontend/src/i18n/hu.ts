@@ -1,4 +1,4 @@
-import type { ApiErrorCode, FieldErrorCode, ParkStatus } from "@eneredge/api";
+import type { ApiErrorCode, FieldErrorCode, ParkStatus } from "@eneredge/backend";
 
 /** Where people write to us; it appears inside a few of the texts below. */
 const CONTACT_EMAIL = "info@eneredge.tech";

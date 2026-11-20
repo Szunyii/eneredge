@@ -1,6 +1,6 @@
 "use client";
 
-import type { Me } from "@eneredge/api";
+import type { Me } from "@eneredge/backend";
 import { createContext, type ReactNode, use } from "react";
 import { AppShell } from "@/components/app-shell";
 import { NoAccess } from "@/components/no-access";

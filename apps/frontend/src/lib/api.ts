@@ -1,4 +1,4 @@
-import type { AppType } from "@eneredge/api";
+import type { AppType } from "@eneredge/backend";
 import { hc } from "hono/client";
 
 /**

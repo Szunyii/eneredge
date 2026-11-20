@@ -1,6 +1,6 @@
 "use client";
 
-import type { ParkDto } from "@eneredge/api";
+import type { ParkDto } from "@eneredge/backend";
 import type { ReactNode } from "react";
 import { z } from "zod";
 import { showRefusal } from "@/components/form/show-refusal";

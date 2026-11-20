@@ -1,6 +1,6 @@
 "use client";
 
-import type { ParkDto } from "@eneredge/api";
+import type { ParkDto } from "@eneredge/backend";
 import { ChevronLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
