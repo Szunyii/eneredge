@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    name: Lint, typecheck, tests, end-to-end
+    runs-on: ubuntu-latest
+
+    services:
+      # The same database image as compose.yaml, on the port the tests expect.
+      db:
+        image: timescale/timescaledb:2.32.1-pg18
+        env:
+          POSTGRES_USER: eneredge
+          POSTGRES_PASSWORD: eneredge
+          POSTGRES_DB: eneredge
+          TIMESCALEDB_TELEMETRY: "off"
+        ports:
+          - 54329:5432
+        options: >-
+          --health-cmd "pg_isready -U eneredge -h 127.0.0.1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run lint
+
+      - run: bun run check
+
+      - run: bun test
+
+      # Ubuntu runners restrict the user namespaces that Chrome's sandbox needs;
+      # lifting that restriction keeps the sandbox on for the end-to-end run.
+      - name: Let headless Chrome use its sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      # Builds the web app, starts it with the API on a throwaway database, and
+      # drives the runner's preinstalled Chrome through the scenarios.
+      - run: bun run e2e

@@ -1,6 +1,127 @@
 # EnerEdge
 
-Solar park monitoring without an on-site device: the park's existing router builds a WireGuard
-tunnel to the platform, and the platform reads the inverters over Modbus TCP, read-only. This
-repository is a Bun workspace with the API, the web app and the database package; the spec and the
-implementation plans are in [`docs/`](docs/).
+Naperőmű-monitoring helyszíni eszköz nélkül: a park meglévő routere WireGuard-tunnelt épít a
+platformhoz, a platform pedig a felhőből, csak olvasva kérdezi le az invertereket Modbus TCP-n.
+
+Ez a repó a platform. A terv és a mérföldkövek a [`docs/`](docs/) mappában vannak:
+[a tulajdonos terve](docs/eneredge-terv-v0.md) és
+[a megvalósítási terv](docs/superpowers/plans/2026-11-20-eneredge-mvp-megvalositasi-terv.md).
+
+## Előfeltételek
+
+- [Bun](https://bun.com) 1.4.5 – a pontos verzió a [`.bun-version`](.bun-version) fájlban van.
+- Docker – a fejlesztői adatbázishoz (PostgreSQL 18 + TimescaleDB).
+- Google Chrome – csak a böngészős végigpróbákhoz (`bun run e2e`).
+
+## Indítás
+
+```bash
+docker compose up -d --wait db     # adatbázis a 54329-es porton
+cp .env.example .env               # majd töltsd ki benne az AUTH_SECRET-et: openssl rand -base64 32
+bun install
+bun run db:migrate                 # táblák létrehozása
+bun dev                            # elindul a frontend és a backend
+```
+
+Ezután a böngészőben: <http://localhost:3000>.
+
+## Két futó rész
+
+| Rész     | Mappa                  | Mi ez                                        | Port |
+| -------- | ---------------------- | -------------------------------------------- | ---- |
+| Frontend | [`apps/web`](apps/web) | Next.js alkalmazás – ezt látja a felhasználó | 3000 |
+| Backend  | [`apps/api`](apps/api) | Hono API – belépés, cégek, parkok            | 3001 |
+
+A böngésző **csak a frontend címét** használja. Az `/api/*` kéréseket a frontend adja tovább a
+backendnek ([`apps/web/src/proxy.ts`](apps/web/src/proxy.ts)), így a kettő kívülről egy címnek
+látszik. A frontend a backendből csak típusokat vesz át
+([`apps/api/src/contract.ts`](apps/api/src/contract.ts)); adathoz kizárólag az API-n át jut.
+
+## Levelek fejlesztés közben
+
+Fejlesztés közben valódi e-mail nem megy ki. A levelek annak a terminálnak a kimenetében jelennek
+meg, ahol a `bun dev` fut, a backend soraiban:
+
+```
+@eneredge/api:dev | --- mail to te@example.com ---
+@eneredge/api:dev | Subject: Erősítsd meg az e-mail-címed
+@eneredge/api:dev | …
+@eneredge/api:dev | http://localhost:3000/api/auth/verify-email?token=…
+```
+
+Regisztráció után innen másold ki a megerősítő linket a böngészőbe.
+
+## Platform-admin
+
+Az Admin oldal (regisztrációra engedélyezett címek, cégenkénti parkkorlát) annak jelenik meg,
+akinek a **megerősített** e-mail-címe szerepel a `.env` `PLATFORM_ADMIN_EMAILS` sorában
+(több cím vesszővel elválasztva). A módosítás után indítsd újra a `bun dev`-et.
+
+## Parancsok
+
+| Parancs                                      | Mit csinál                                                                                                                                            |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun dev`                                    | Elindítja a frontendet és a backendet; a kód szerkesztésekor maguktól frissülnek.                                                                     |
+| `bun test`                                   | Egység- és API-tesztek. Mindegyik tesztfájl saját, eldobható adatbázist kap.                                                                          |
+| `bun run e2e`                                | Böngészős végigpróbák: felépíti a frontendet, elindítja a teljes rendszert egy eldobható adatbázissal, és Chrome-ban végigjátssza a forgatókönyveket. |
+| `bun run check`                              | Típusellenőrzés minden csomagban.                                                                                                                     |
+| `bun run lint`                               | Formázás és kódminőség ellenőrzése (Biome).                                                                                                           |
+| `bun run format`                             | Ugyanez, a javítható hibák kijavításával.                                                                                                             |
+| `bun run db:migrate`                         | A még le nem futott adatbázis-migrációk alkalmazása.                                                                                                  |
+| `bun run db:generate --name=<mit_valtoztat>` | Migráció készítése a séma változásaiból.                                                                                                              |
+| `bun run build`                              | A frontend éles felépítése.                                                                                                                           |
+
+A végigpróbákhoz hasznos:
+
+- `bun run e2e auth` – csak azok a fájlok futnak, amelyek nevében szerepel az „auth”.
+- `E2E_SKIP_BUILD=1 bun run e2e` – az előző felépítést használja (ha csak a teszt változott).
+- `E2E_BROWSER=webkit bun run e2e` – macOS-en a rendszer WebKitjével fut Chrome helyett.
+
+## Mappaszerkezet
+
+```
+apps/
+  api/                 backend: Hono API (Bun)
+    src/index.ts         belépési pont
+    src/app.ts           az összes útvonal egy helyen
+    src/contract.ts      amit a frontend láthat a backendből: csak típusok
+    src/auth.ts          belépés, cégek, meghívók (Better Auth) beállítása
+    src/routes/          egy fájl = egy útvonalcsoport (health, me, parks, admin)
+    src/middleware/      munkamenet- és cégtagság-ellenőrzés
+    test/                API-tesztek
+  web/                 frontend: Next.js (App Router)
+    src/app/             az oldalak; a mappák neve az oldal címe
+    src/components/      saját komponensek
+    src/components/ui/   shadcn/ui komponensek (a shadcn CLI-vel felvéve)
+    src/components/form/ az űrlapok közös alapja (TanStack Form)
+    src/lib/             adatlekérdezések (TanStack Query) és segédfüggvények
+    src/i18n/hu.ts       a felület összes szövege
+packages/
+  db/                  adatbázis: séma, migrációk, lekérdezések (Drizzle)
+    src/schema/          táblák
+    src/repositories/    lekérdezések; a cégadatokat érintők OrgScope-ot kérnek
+    src/scope.ts         OrgScope: a cégtagság bizonyítéka
+    migrations/          SQL-migrációk
+e2e/                   böngészős végigpróbák a teljes rendszeren
+docs/                  a terv és a megvalósítási tervek
+```
+
+## Néhány szabály, amihez a kód tartja magát
+
+- **Bérlő-elszigetelés:** egy cég adatait érintő lekérdezés csak `OrgScope`-pal hívható, amelyet
+  kizárólag a tagság ellenőrzése állít elő ([`packages/db/src/scope.ts`](packages/db/src/scope.ts)).
+  Más cég erőforrására a válasz 404.
+- **Szövegek:** a felület minden szövege az [`apps/web/src/i18n/hu.ts`](apps/web/src/i18n/hu.ts)
+  fájlban van; az API hibakódot ad, nem szöveget.
+- **Felület:** shadcn/ui komponensek, a szerveradat TanStack Queryvel, az űrlapok TanStack Formmal.
+- **Olvashatóság:** kiírt, beszédes nevek; egy fájl egy felelősség; megjegyzés ott, ahol a
+  „miért” nem látszik a kódból.
+- **Titkok:** csak a `.env` fájlban, amely nem kerül a repóba.
+
+## Tudnivalók
+
+- Új csomag telepítése után indítsd újra a `bun dev`-et: a futó folyamat nem látja az újonnan
+  telepített csomagokat.
+- A Next.js is Bun alatt fut (`bun --bun next …`), Node.js-re nincs szükség.
+- A belépés tábláit a Better Auth CLI generálja; a parancs az
+  [`apps/api/auth.cli.ts`](apps/api/auth.cli.ts) elején áll.
