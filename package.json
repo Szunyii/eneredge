@@ -14,7 +14,7 @@
     "lint": "biome check .",
     "format": "biome check --write .",
     "db:generate": "bun run --cwd packages/db generate",
-    "db:migrate": "bun run --cwd packages/db migrate",
+    "db:migrate": "bun packages/db/src/migrate.ts",
     "e2e": "bun e2e/run.ts"
   },
   "devDependencies": {
