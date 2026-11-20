@@ -1,5 +1,6 @@
 import { asc, eq, sql } from "drizzle-orm";
 import type { Db, QueryRunner } from "../client.ts";
+import { inHungarianOrder } from "../ordering.ts";
 import { organization, organizationSettings, park } from "../schema/index.ts";
 import { audit } from "./audit.ts";
 
@@ -76,6 +77,6 @@ export const orgSettings = {
       .leftJoin(park, eq(park.organizationId, organization.id))
       .leftJoin(organizationSettings, eq(organizationSettings.organizationId, organization.id))
       .groupBy(organization.id, organizationSettings.parkLimit)
-      .orderBy(asc(sql`lower(${organization.name})`), asc(organization.slug));
+      .orderBy(inHungarianOrder(organization.name), asc(organization.slug));
   },
 };

@@ -5,11 +5,10 @@ import type { AppDeps } from "../app.ts";
 import type { Auth } from "../auth.ts";
 import { apiError } from "../errors.ts";
 import { requirePlatformAdmin, requireSession, type SessionVars } from "../middleware/session.ts";
+import { emailAddress, isOpaqueId } from "../text-rules.ts";
 import { jsonBody } from "../validation.ts";
 
-const allowlistEntrySchema = z.object({
-  email: z.string().trim().toLowerCase().pipe(z.email()),
-});
+const allowlistEntrySchema = z.object({ email: emailAddress });
 
 const parkLimitSchema = z.object({
   parkLimit: z.number().int().min(1).max(1000),
@@ -42,7 +41,9 @@ export function adminRoutes(deps: AppDeps, auth: Auth) {
       })
 
       .delete("/signup-allowlist/:email", async (context) => {
-        const wasListed = await signupAllowlist.remove(deps.db, context.req.param("email"));
+        const entry = allowlistEntrySchema.safeParse({ email: context.req.param("email") });
+        const wasListed =
+          entry.success && (await signupAllowlist.remove(deps.db, entry.data.email));
         if (!wasListed) return apiError(context, 404, "not_found");
         return context.body(null, 204);
       })
@@ -55,11 +56,14 @@ export function adminRoutes(deps: AppDeps, auth: Auth) {
 
       .patch("/orgs/:orgId", jsonBody(parkLimitSchema), async (context) => {
         const { parkLimit } = context.req.valid("json");
-        const companyExists = await orgSettings.setParkLimit(deps.db, {
-          organizationId: context.req.param("orgId"),
-          parkLimit,
-          actorUserId: context.get("user").id,
-        });
+        const organizationId = context.req.param("orgId");
+        const companyExists =
+          isOpaqueId(organizationId) &&
+          (await orgSettings.setParkLimit(deps.db, {
+            organizationId,
+            parkLimit,
+            actorUserId: context.get("user").id,
+          }));
         if (!companyExists) return apiError(context, 404, "not_found");
         return context.json({ parkLimit }, 200);
       })

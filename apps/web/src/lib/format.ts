@@ -4,3 +4,8 @@ export function formatDate(isoDate: string | Date, timeZone?: string): string {
     new Date(isoDate),
   );
 }
+
+/** A number for reading: with a decimal comma, rounded to at most six decimals. */
+export function formatDecimal(value: number): string {
+  return value.toLocaleString("hu-HU", { maximumFractionDigits: 6, useGrouping: false });
+}

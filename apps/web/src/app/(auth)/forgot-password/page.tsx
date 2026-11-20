@@ -20,10 +20,7 @@ export default function ForgotPasswordPage() {
     defaultValues: { email: "" },
     validators: { onSubmit: forgotPasswordSchema },
     onSubmit: async ({ value }) => {
-      await authClient.requestPasswordReset({
-        email: value.email.trim(),
-        redirectTo: "/reset-password",
-      });
+      await authClient.requestPasswordReset({ email: value.email.trim() });
       // The same answer for every address: whether it has an account is not ours to tell.
       setWasSent(true);
     },

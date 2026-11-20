@@ -1,29 +1,25 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import type { Me } from "../src/routes/me.ts";
+import { signUp, signUpVerified, uniqueEmail } from "./support/accounts.ts";
+import { type Actor, createTestApp, json, request, type TestApp } from "./support/app.ts";
+import { linkIn, mailTo, settledMailCount } from "./support/mail.ts";
 import {
-  type Actor,
   acceptInvitation,
   cancelInvitation,
   countOrganizations,
   createOrg,
   createOrgResponse,
-  createTestApp,
   invite,
   inviteAndAccept,
   inviteResponse,
-  json,
-  lastMailTo,
   leaveOrganization,
-  linkIn,
   memberRoles,
+  organizationName,
   removeMember,
-  request,
-  signUp,
-  signUpVerified,
-  type TestApp,
-  uniqueEmail,
+  renameOrgResponse,
+  uniqueSlug,
   updateMemberRole,
-} from "./helpers.ts";
+} from "./support/organizations.ts";
 
 let testApp: TestApp;
 beforeAll(async () => {
@@ -78,16 +74,63 @@ test("an organization cannot be deleted through the API", async () => {
   expect(await countOrganizations(testApp, organization.slug)).toBe(1);
 });
 
-test("an organization's slug cannot be changed to a malformed one", async () => {
+test("an organization's slug cannot be changed, its name can", async () => {
   const owner = await signUpVerified(testApp);
   const organization = await createOrg(testApp, owner);
+  const updatePath = "/api/auth/organization/update";
 
-  const response = await request(testApp, owner, "POST", "/api/auth/organization/update", {
-    organizationId: organization.id,
-    data: { slug: "Rossz Azonosító!" },
-  });
-  expectRefused(response);
+  // Every address of the company's pages contains the slug: changing it would break them all.
+  for (const slug of ["Rossz Azonosító!", "egy-szabalyos-uj-azonosito"]) {
+    expectRefused(
+      await request(testApp, owner, "POST", updatePath, {
+        organizationId: organization.id,
+        data: { slug },
+      }),
+    );
+  }
   expect(await countOrganizations(testApp, organization.slug)).toBe(1);
+
+  const renamed = await request(testApp, owner, "POST", updatePath, {
+    organizationId: organization.id,
+    data: { name: "Átnevezett Kft." },
+  });
+  expect(renamed.status).toBe(200);
+  expect((await organizationsOf(testApp, owner))[0]).toMatchObject({
+    name: "Átnevezett Kft.",
+    slug: organization.slug,
+  });
+});
+
+const NUL = "\u0000";
+const faultyCompanyNames: [description: string, name: string][] = [
+  ["a name of two lines", "Két\nSor Kft."],
+  ["a name with a NUL in it", `Vég${NUL}zetes Kft.`],
+  ["a blank name", "   "],
+  ["a name with spaces around it", " Szóközös Kft. "],
+  ["a 101-character name", "x".repeat(101)],
+];
+
+test.each(faultyCompanyNames)("a company cannot be created with %s", async (_description, name) => {
+  const owner = await signUpVerified(testApp);
+  const slug = uniqueSlug();
+
+  expectRefused(await createOrgResponse(testApp, owner, { name, slug }));
+  expect(await countOrganizations(testApp, slug)).toBe(0);
+});
+
+test.each(faultyCompanyNames)("a company cannot be renamed to %s", async (_description, name) => {
+  const owner = await signUpVerified(testApp);
+  const organization = await createOrg(testApp, owner, { name: "Eredeti Név Kft." });
+
+  expectRefused(await renameOrgResponse(testApp, owner, organization, name));
+  expect(await organizationName(testApp, organization)).toBe("Eredeti Név Kft.");
+});
+
+test("a company name can be as long as 100 characters", async () => {
+  const owner = await signUpVerified(testApp);
+  const longestName = "x".repeat(100);
+  const organization = await createOrg(testApp, owner, { name: longestName });
+  expect(await organizationName(testApp, organization)).toBe(longestName);
 });
 
 test("an invited user accepts and becomes a member with the invited role", async () => {
@@ -96,7 +139,8 @@ test("an invited user accepts and becomes a member with the invited role", async
   const inviteeEmail = uniqueEmail();
 
   const invitationId = await invite(testApp, owner, organization, inviteeEmail, "member");
-  expect(linkIn(lastMailTo(testApp, inviteeEmail))).toBe(
+  const invitationMail = await mailTo(testApp, inviteeEmail, "/accept-invitation/");
+  expect(linkIn(invitationMail).toString()).toBe(
     `${testApp.env.APP_URL}/accept-invitation/${invitationId}`,
   );
 
@@ -182,7 +226,7 @@ test("a member cannot invite", async () => {
   expect(testApp.outbox.some((mail) => mail.to === outsiderEmail)).toBe(false);
 });
 
-test("in allowlist mode an invited address can sign up", async () => {
+test("in allowlist mode an address can sign up once it is invited", async () => {
   const adminEmail = uniqueEmail();
   const closedApp = await createTestApp({
     SIGNUP_MODE: "allowlist",
@@ -193,8 +237,9 @@ test("in allowlist mode an invited address can sign up", async () => {
     const organization = await createOrg(closedApp, owner);
     const inviteeEmail = uniqueEmail();
 
-    // Not invited yet: closed out.
-    expectRefused(await signUp(closedApp, { email: inviteeEmail }));
+    // Not invited yet: the sign-up leads nowhere.
+    await signUp(closedApp, { email: inviteeEmail });
+    expect(await settledMailCount(closedApp, inviteeEmail)).toBe(0);
 
     const invitationId = await invite(closedApp, owner, organization, inviteeEmail, "member");
     const invitee = await signUpVerified(closedApp, { email: inviteeEmail });
@@ -203,6 +248,68 @@ test("in allowlist mode an invited address can sign up", async () => {
   } finally {
     await closedApp.close();
   }
+});
+
+test("a member can change nothing about the company", async () => {
+  const owner = await signUpVerified(testApp);
+  const organization = await createOrg(testApp, owner, { name: "Eredeti Név Kft." });
+  const member = await inviteAndAccept(testApp, owner, organization, "member");
+  const colleague = await inviteAndAccept(testApp, owner, organization, "member");
+  const pendingEmail = uniqueEmail();
+  const pendingInvitationId = await invite(testApp, owner, organization, pendingEmail, "member");
+
+  expectRefused(await renameOrgResponse(testApp, member, organization, "Elfoglalt Kft."));
+  expectRefused(await cancelInvitation(testApp, member, pendingInvitationId));
+  expectRefused(await removeMember(testApp, member, organization, colleague.email));
+  expectRefused(await updateMemberRole(testApp, member, organization, colleague, "admin"));
+  expectRefused(await updateMemberRole(testApp, member, organization, member, "owner"));
+
+  expect(await organizationName(testApp, organization)).toBe("Eredeti Név Kft.");
+  expect(await memberRoles(testApp, organization)).toEqual(["member", "member", "owner"]);
+  // The invitation the member tried to cancel still works.
+  const invitee = await signUpVerified(testApp, { email: pendingEmail });
+  expect((await acceptInvitation(testApp, invitee, pendingInvitationId)).status).toBe(200);
+});
+
+test("an admin manages members but cannot make or unmake an owner", async () => {
+  const owner = await signUpVerified(testApp);
+  const organization = await createOrg(testApp, owner);
+  const admin = await inviteAndAccept(testApp, owner, organization, "admin");
+  const member = await inviteAndAccept(testApp, owner, organization, "member");
+
+  // Within their reach: plain members.
+  expect((await updateMemberRole(testApp, admin, organization, member, "admin")).status).toBe(200);
+  expect((await updateMemberRole(testApp, admin, organization, member, "member")).status).toBe(200);
+
+  // Out of their reach: the owner's role, in either direction.
+  expectRefused(await updateMemberRole(testApp, admin, organization, member, "owner"));
+  expectRefused(await updateMemberRole(testApp, admin, organization, admin, "owner"));
+  expectRefused(await updateMemberRole(testApp, admin, organization, owner, "admin"));
+  expectRefused(await removeMember(testApp, admin, organization, owner.email));
+  expectRefused(
+    await request(testApp, admin, "POST", "/api/auth/organization/invite-member", {
+      email: uniqueEmail(),
+      role: "owner",
+      organizationId: organization.id,
+    }),
+  );
+
+  expect(await memberRoles(testApp, organization)).toEqual(["admin", "member", "owner"]);
+});
+
+test("someone outside the company can do nothing to it", async () => {
+  const owner = await signUpVerified(testApp);
+  const organization = await createOrg(testApp, owner, { name: "Eredeti Név Kft." });
+  const member = await inviteAndAccept(testApp, owner, organization, "member");
+  const outsider = await signUpVerified(testApp);
+
+  expectRefused(await renameOrgResponse(testApp, outsider, organization, "Elfoglalt Kft."));
+  expectRefused(await inviteResponse(testApp, outsider, organization, uniqueEmail(), "admin"));
+  expectRefused(await removeMember(testApp, outsider, organization, member.email));
+  expectRefused(await updateMemberRole(testApp, outsider, organization, member, "admin"));
+
+  expect(await organizationName(testApp, organization)).toBe("Eredeti Név Kft.");
+  expect(await memberRoles(testApp, organization)).toEqual(["member", "owner"]);
 });
 
 test("the only owner cannot leave, be removed or be demoted", async () => {

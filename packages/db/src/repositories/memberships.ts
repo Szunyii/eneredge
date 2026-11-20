@@ -1,5 +1,6 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import type { Db } from "../client.ts";
+import { inHungarianOrder } from "../ordering.ts";
 import { member, organization } from "../schema/index.ts";
 import { type OrgRole, strongestRole } from "../scope.ts";
 
@@ -19,7 +20,7 @@ export const memberships = {
       .from(member)
       .innerJoin(organization, eq(member.organizationId, organization.id))
       .where(eq(member.userId, userId))
-      .orderBy(asc(sql`lower(${organization.name})`), asc(organization.slug));
+      .orderBy(inHungarianOrder(organization.name), asc(organization.slug));
 
     return found.map(({ storedRoles, ...company }) => ({
       ...company,

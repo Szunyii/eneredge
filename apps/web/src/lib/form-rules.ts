@@ -8,6 +8,9 @@ export const MIN_PASSWORD_LENGTH = 10;
 
 export const requiredText = z.string().trim().min(1, hu.fieldErrors.required);
 
+/** The name of a person or a company; the server allows the same hundred characters. */
+export const displayName = requiredText.max(100, hu.fieldErrors.too_long);
+
 export const emailAddress = requiredText.pipe(z.email(hu.auth.invalidEmail));
 
 /** A password being chosen (sign-up, reset). Signing in only needs "not empty". */
@@ -20,14 +23,22 @@ export const enteredPassword = z.string().min(1, hu.fieldErrors.required);
 
 export const parkName = requiredText.max(80, hu.fieldErrors.too_long);
 
-/** A number as people type it here: "47,4979" and "47.4979" mean the same. */
+// Digits, optionally a sign in front and a fraction after a comma or a point.
+// Stricter than Number(), which would also take "0x1F" and "1e1".
+const DECIMAL_PATTERN = /^[+-]?\d+(?:[.,]\d+)?$/;
+
+/** A number as people type it here: "47,4979" and "47.4979" mean the same. Anything else is NaN. */
 export function parseDecimal(text: string): number {
-  return Number(text.trim().replace(",", "."));
+  const trimmed = text.trim();
+  return DECIMAL_PATTERN.test(trimmed) ? Number(trimmed.replace(",", ".")) : Number.NaN;
 }
 
-/** The same number the way it is written in Hungarian: with a decimal comma. */
-export function formatDecimal(value: number): string {
-  return value.toLocaleString("hu-HU", { maximumFractionDigits: 6, useGrouping: false });
+/**
+ * A stored number as the starting value of an input: every digit kept, so saving
+ * the form unchanged does not alter it. (For showing a number, see format.ts.)
+ */
+export function decimalInputValue(value: number): string {
+  return value.toLocaleString("hu-HU", { maximumFractionDigits: 20, useGrouping: false });
 }
 
 /** A coordinate typed as text: a number within the given degrees. */

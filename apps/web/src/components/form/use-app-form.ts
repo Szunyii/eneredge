@@ -12,9 +12,9 @@ import { TextField } from "@/components/form/text-field";
  *   <form.AppField name="email">{(field) => <field.TextField label="…" />}</form.AppField>
  *   <form.AppForm><form.FormError /><form.SubmitButton>…</form.SubmitButton></form.AppForm>
  *
- * Checks before sending go into `validators.onSubmit` (a Zod schema); the request
- * itself goes into `validators.onSubmitAsync`, which can hand the server's
- * refusal back to the form or to single fields; `onSubmit` is what follows success.
+ * Checks before sending go into `validators.onSubmit` (a Zod schema). `onSubmit`
+ * sends the request; when the server refuses it, `showRefusal` puts the reason
+ * on the form or under the fields it concerns.
  */
 export const { useAppForm } = createFormHook({
   fieldContext,

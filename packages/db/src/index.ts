@@ -15,5 +15,5 @@ export {
   parks,
 } from "./repositories/parks.ts";
 export { type SignupAllowlistEntry, signupAllowlist } from "./repositories/signup-allowlist.ts";
-export { parkStatus } from "./schema/park.ts";
+export { type UserAccount, users } from "./repositories/users.ts";
 export { canManage, type OrgRole, type OrgScope, resolveOrgScope } from "./scope.ts";

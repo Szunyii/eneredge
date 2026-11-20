@@ -1,5 +1,8 @@
 import type { ApiErrorCode, FieldErrorCode, ParkStatus } from "@eneredge/api";
 
+/** Where people write to us; it appears inside a few of the texts below. */
+const CONTACT_EMAIL = "info@eneredge.tech";
+
 /**
  * Every text of the interface, in Hungarian, informal voice. Components take their
  * wording from here, and the end-to-end tests find elements by these same strings.
@@ -9,7 +12,6 @@ export const hu = {
   common: {
     appName: "EnerEdge",
     description: "Naperőművek felügyelete helyszíni eszköz nélkül.",
-    contactEmail: "info@eneredge.tech",
     retry: "Próbáld újra",
     signOut: "Kilépés",
     cancel: "Mégse",
@@ -23,7 +25,6 @@ export const hu = {
     settings: "Beállítások",
     admin: "Admin",
     account: "Fiók",
-    company: "Cég",
   },
   auth: {
     // Fields shared by the forms
@@ -42,26 +43,30 @@ export const hu = {
     signUpLink: "Regisztrálj",
     invalidCredentials: "Hibás e-mail-cím vagy jelszó.",
     emailNotVerified:
-      "Még nem erősítetted meg az e-mail-címed. Most küldtünk egy új levelet a megerősítő linkkel.",
-    verificationFailed:
-      "A megerősítő link lejárt, vagy már felhasználtad. Lépj be, és küldünk egy újat.",
+      "Ennek a fióknak még nincs megerősítve az e-mail-címe. Kérj új linket az „Elfelejtetted a jelszavad?” pontban: azzal a címed is megerősíted.",
 
     // Sign-up
     signUpTitle: "Regisztráció",
-    signUpLead: "Hozz létre egy fiókot, utána felveheted a céged és a parkjaidat.",
+    signUpLead:
+      "Add meg a neved és az e-mail-címed. Küldünk egy linket, amelyen beállítod a jelszavad.",
     createAccount: "Fiók létrehozása",
     haveAccount: "Van már fiókod?",
     signInLink: "Lépj be",
-    signupClosed:
-      "A regisztráció jelenleg meghívásos. Ha szeretnéd kipróbálni az EnerEdge-et, írj nekünk: info@eneredge.tech",
+    signupByInvitation: `A regisztráció jelenleg meghívásos: fiókot csak meghívott vagy általunk engedélyezett e-mail-címmel lehet létrehozni. Ha szeretnéd kipróbálni az EnerEdge-et, írj nekünk: ${CONTACT_EMAIL}`,
 
     // After sign-up
     checkEmailTitle: "Nézd meg a leveleidet",
     checkEmailSentTo: "Küldtünk egy levelet ide:",
-    checkEmailSent: "Küldtünk egy levelet.",
-    checkEmailWhatNext: "A benne lévő linkre kattintva megerősíted a címed, és be is lépsz.",
+    checkEmailIfAllowed: "Ha ezzel a címmel lehet regisztrálni, küldtünk rá egy levelet:",
+    checkEmailWhatNext: "A benne lévő linken tudsz továbblépni; a link 24 óráig érvényes.",
     resend: "Levél újraküldése",
     resent: "Elküldtük újra. Nézd meg a levélszemét mappát is.",
+
+    // The first password of a new account
+    welcomeTitle: "Állítsd be a jelszavad",
+    welcomeLead: "Ezzel fejezed be a regisztrációt, és be is lépsz.",
+    accountOf: "Fiók:",
+    savePasswordAndSignIn: "Jelszó mentése és belépés",
 
     // Forgotten password
     forgotTitle: "Elfelejtett jelszó",
@@ -73,9 +78,9 @@ export const hu = {
 
     // New password
     resetTitle: "Új jelszó beállítása",
+    resetLead: "Add meg az új jelszavad; utána be is lépsz vele.",
     newPassword: "Új jelszó",
-    saveNewPassword: "Jelszó mentése",
-    resetDone: "Az új jelszavad beállítva. Lépj be vele.",
+    resetDone: "A jelszavad beállítva. Lépj be vele.",
     resetLinkInvalid: "Ez a link lejárt, vagy már felhasználtad.",
     requestNewLink: "Kérj új linket",
   },
@@ -229,5 +234,3 @@ export const hu = {
     invalid: "Ez az érték nem érvényes.",
   } satisfies Record<FieldErrorCode, string>,
 };
-
-export type Messages = typeof hu;

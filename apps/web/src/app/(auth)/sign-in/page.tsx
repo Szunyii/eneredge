@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 import { AuthCard, textLinkClass } from "@/components/auth-layout";
+import { showRefusal } from "@/components/form/show-refusal";
 import { useAppForm } from "@/components/form/use-app-form";
 import { FormMessage } from "@/components/form-message";
 import { FieldGroup } from "@/components/ui/field";
@@ -34,17 +35,16 @@ function SignInForm() {
 
   const form = useAppForm({
     defaultValues: { email: "", password: "" },
-    validators: {
-      onSubmit: signInSchema,
-      onSubmitAsync: async ({ value }) => {
-        const result = await authClient.signIn.email({
-          email: value.email.trim(),
-          password: value.password,
-        });
-        return result.error ? { form: signInErrorMessage(result.error.code), fields: {} } : null;
-      },
-    },
-    onSubmit: async () => {
+    validators: { onSubmit: signInSchema },
+    onSubmit: async ({ value, formApi }) => {
+      const result = await authClient.signIn.email({
+        email: value.email.trim(),
+        password: value.password,
+      });
+      if (result.error) {
+        showRefusal(formApi, { form: signInErrorMessage(result.error.code), fields: {} });
+        return;
+      }
       await refreshSession(queryClient);
       router.replace(nextPath ?? "/");
     },
@@ -107,9 +107,6 @@ function SignInForm() {
 function ArrivalNotice({ searchParams }: { searchParams: URLSearchParams }) {
   if (searchParams.get("reset") === "done") {
     return <FormMessage tone="notice">{hu.auth.resetDone}</FormMessage>;
-  }
-  if (searchParams.get("verification") === "failed") {
-    return <FormMessage tone="error">{hu.auth.verificationFailed}</FormMessage>;
   }
   return null;
 }

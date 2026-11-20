@@ -3,7 +3,7 @@ import { createDb } from "@eneredge/db";
 import { createApp } from "../src/app.ts";
 import { createMemoryMailer } from "../src/mail.ts";
 import { startServer } from "../src/server.ts";
-import { createTestApp, type TestApp } from "./helpers.ts";
+import { createTestApp, type TestApp } from "./support/app.ts";
 
 let testApp: TestApp;
 beforeAll(async () => {

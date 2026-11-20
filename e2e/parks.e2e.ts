@@ -4,10 +4,11 @@ import {
   acceptInvitationAsNewUser,
   addPark,
   createOrganization,
+  inviteColleague,
   newUser,
   ownerWithCompany,
   scenario,
-  signUpAndVerify,
+  signUpAndSetPassword,
   uniqueCompanyName,
   uniqueEmail,
 } from "./helpers.ts";
@@ -15,7 +16,7 @@ import {
 test("an owner adds a park and invites a colleague who can see but not change it", () =>
   scenario(async (open) => {
     const page = await open();
-    await signUpAndVerify(page, newUser("Tulaj Dona"));
+    await signUpAndSetPassword(page, newUser("Tulaj Dona"));
     const slug = await createOrganization(page, "Vega Energia Kft.");
 
     await page.click(hu.parks.new);
@@ -27,10 +28,7 @@ test("an owner adds a park and invites a colleague who can see but not change it
     await page.waitForText(hu.status.draft);
 
     const colleague = newUser("Kolléga Béla");
-    await page.goto(`/o/${slug}/settings`);
-    await page.fill(hu.settings.inviteEmail, colleague.email);
-    await page.click(hu.settings.invite);
-    await page.waitForText(colleague.email);
+    await inviteColleague(page, slug, colleague.email);
 
     const other = await open();
     await acceptInvitationAsNewUser(other, colleague);
@@ -149,7 +147,7 @@ test("a platform admin allows an address and raises a company's park limit", () 
     const allowedEmail = uniqueEmail();
 
     const page = await open();
-    await signUpAndVerify(page, { ...newUser("Admin Anna"), email: adminEmail });
+    await signUpAndSetPassword(page, { ...newUser("Admin Anna"), email: adminEmail });
     await createOrganization(page, companyName);
 
     await page.click(hu.nav.admin);

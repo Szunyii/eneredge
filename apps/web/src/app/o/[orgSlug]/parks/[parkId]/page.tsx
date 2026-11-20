@@ -15,8 +15,7 @@ import { SectionCard } from "@/components/section-card";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { hu } from "@/i18n/hu";
-import { formatDecimal } from "@/lib/form-rules";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDecimal } from "@/lib/format";
 import { useDeletePark, usePark, useUpdatePark } from "@/lib/parks";
 
 export default function ParkPage() {
@@ -82,7 +81,7 @@ function ParkDetails({ park, organization }: { park: ParkDto; organization: Curr
           <ParkForm
             park={park}
             submitLabel={hu.park.save}
-            onSubmit={async (values) => {
+            onSave={async (values) => {
               await updatePark.mutateAsync(values);
               toast.success(hu.park.saved);
               setIsEditing(false);

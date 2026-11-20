@@ -1,5 +1,6 @@
 import { appendFile } from "node:fs/promises";
 import nodemailer from "nodemailer";
+import { runInBackground } from "./background.ts";
 import type { Env } from "./env.ts";
 
 export type MailMessage = { to: string; subject: string; text: string; html?: string };
@@ -57,4 +58,13 @@ export function createMemoryMailer(): Mailer & { outbox: MailMessage[] } {
       outbox.push(message);
     },
   };
+}
+
+/**
+ * Sends a mail without making the caller wait for it. Requests answer in the
+ * same time whether or not a mail goes out, so the timing gives nothing away.
+ */
+export function sendInBackground(mailer: Mailer, message: MailMessage): void {
+  // The recipient stays out of the log; the subject tells which mail it was.
+  runInBackground(`Sending the mail "${message.subject}"`, () => mailer.send(message));
 }

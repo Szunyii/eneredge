@@ -2,9 +2,11 @@
 
 import { toast } from "sonner";
 import { z } from "zod";
+import { showRefusal } from "@/components/form/show-refusal";
 import { useAppForm } from "@/components/form/use-app-form";
 import type { CurrentOrganization } from "@/components/organization-gate";
 import { hu } from "@/i18n/hu";
+import type { FormRefusal } from "@/lib/api-error";
 import { emailAddress } from "@/lib/form-rules";
 import { OrganizationError, useInviteMember } from "@/lib/organization";
 
@@ -21,25 +23,16 @@ export function InviteForm({ organization }: { organization: CurrentOrganization
 
   const form = useAppForm({
     defaultValues: { email: "", role: "member" as "member" | "admin" },
-    validators: {
-      onSubmit: invitationSchema,
-      onSubmitAsync: async ({ value }) => {
-        try {
-          await invite.mutateAsync({ email: value.email.trim(), role: value.role });
-          return null;
-        } catch (error) {
-          const isAlreadyMember =
-            error instanceof OrganizationError &&
-            error.code === "USER_IS_ALREADY_A_MEMBER_OF_THIS_ORGANIZATION";
-          return isAlreadyMember
-            ? { fields: { email: hu.settings.alreadyMember } }
-            : { form: hu.errors.internal, fields: {} };
-        }
-      },
-    },
-    onSubmit: ({ value, formApi }) => {
-      toast.success(hu.settings.invited(value.email.trim()));
-      formApi.reset();
+    validators: { onSubmit: invitationSchema },
+    onSubmit: async ({ value, formApi }) => {
+      const email = value.email.trim();
+      try {
+        await invite.mutateAsync({ email, role: value.role });
+        toast.success(hu.settings.invited(email));
+        formApi.reset();
+      } catch (error) {
+        showRefusal(formApi, invitationRefusal(error));
+      }
     },
   });
 
@@ -73,4 +66,13 @@ export function InviteForm({ organization }: { organization: CurrentOrganization
       </form.AppForm>
     </form>
   );
+}
+
+function invitationRefusal(error: unknown): FormRefusal {
+  const isAlreadyMember =
+    error instanceof OrganizationError &&
+    error.code === "USER_IS_ALREADY_A_MEMBER_OF_THIS_ORGANIZATION";
+  return isAlreadyMember
+    ? { fields: { email: hu.settings.alreadyMember } }
+    : { form: hu.errors.internal, fields: {} };
 }

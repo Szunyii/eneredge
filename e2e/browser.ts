@@ -13,9 +13,7 @@ const POLL_INTERVAL_MS = 100;
 
 export type Viewport = { width: number; height: number };
 
-export const DESKTOP: Viewport = { width: 1280, height: 900 };
-/** A common phone, upright. */
-export const PHONE: Viewport = { width: 390, height: 844 };
+const DESKTOP: Viewport = { width: 1280, height: 900 };
 
 export type Page = {
   /** Loads an address of the app, given as a path (`/sign-in`). */

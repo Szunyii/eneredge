@@ -25,7 +25,7 @@ export default function NewParkPage() {
       <div className="rounded-2xl border border-line bg-sheet p-6 sm:p-8">
         <ParkForm
           submitLabel={hu.park.create}
-          onSubmit={async (values) => {
+          onSave={async (values) => {
             const park = await createPark.mutateAsync(values);
             router.push(`${parksHref}/${park.id}`);
           }}

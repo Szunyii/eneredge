@@ -32,6 +32,7 @@ test("production requires SMTP", () => {
 
 test("production requires an https APP_URL", () => {
   const smtp = {
+    SIGNUP_MODE: "allowlist",
     MAIL_TRANSPORT: "smtp",
     SMTP_HOST: "smtp.example",
     SMTP_PORT: "465",
@@ -81,4 +82,20 @@ test("lists every problem at once", () => {
   expect(message).toContain("DATABASE_URL");
   expect(message).toContain("AUTH_SECRET");
   expect(message).toContain("PORT");
+});
+
+test("production must say whether sign-up is open", () => {
+  const production = {
+    ...minimal,
+    NODE_ENV: "production",
+    APP_URL: "https://app.example",
+    MAIL_TRANSPORT: "smtp",
+    SMTP_HOST: "smtp.example",
+    SMTP_PORT: "465",
+    SMTP_USER: "u",
+    SMTP_PASSWORD: "p",
+  };
+  // Left out, it must not quietly mean "anyone can sign up".
+  expect(() => loadEnv(production)).toThrow(/SIGNUP_MODE/);
+  expect(loadEnv({ ...production, SIGNUP_MODE: "open" }).SIGNUP_MODE).toBe("open");
 });

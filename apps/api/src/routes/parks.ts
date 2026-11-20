@@ -6,6 +6,7 @@ import type { Auth } from "../auth.ts";
 import { apiError } from "../errors.ts";
 import { type OrgVars, requireManager, requireOrg } from "../middleware/org.ts";
 import { requireSession } from "../middleware/session.ts";
+import { singleLineText } from "../text-rules.ts";
 import { jsonBody } from "../validation.ts";
 
 /** A park as the API shows it. */
@@ -24,7 +25,7 @@ export type ParkDto = {
 
 // What a manager may send. Anything else in the body — status, billingStartedAt — is dropped.
 const parkInputSchema = z.object({
-  name: z.string().trim().min(1).max(80),
+  name: singleLineText(80),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
   timezone: z.string().trim().min(1).refine(isTimeZone),

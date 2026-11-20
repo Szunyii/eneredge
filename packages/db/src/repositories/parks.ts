@@ -1,5 +1,6 @@
 import { and, asc, eq, ne, sql } from "drizzle-orm";
 import type { Db, Transaction } from "../client.ts";
+import { inHungarianOrder } from "../ordering.ts";
 import { organization, park } from "../schema/index.ts";
 import type { OrgScope } from "../scope.ts";
 import { isUuid } from "../uuid.ts";
@@ -37,13 +38,13 @@ export class ParkLimitReachedError extends Error {
  * Every change writes its audit row in the same transaction.
  */
 export const parks = {
-  /** The company's parks, ordered by name. */
+  /** The company's parks, in alphabetical order. */
   list(db: Db, scope: OrgScope): Promise<Park[]> {
     return db
       .select()
       .from(park)
       .where(ofOrganization(scope))
-      .orderBy(asc(sql`lower(${park.name})`), asc(park.id));
+      .orderBy(inHungarianOrder(park.name), asc(park.id));
   },
 
   async get(db: Db, scope: OrgScope, parkId: string): Promise<Park | null> {

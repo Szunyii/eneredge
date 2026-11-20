@@ -2,6 +2,7 @@
 // `@eneredge/api` exports, so no backend code can end up in the browser bundle.
 export type { AppType } from "./app.ts";
 export type { ApiErrorBody, ApiErrorCode, FieldErrorCode } from "./errors.ts";
+export type { PublicConfig } from "./routes/config.ts";
 export type { Me } from "./routes/me.ts";
 
 export type { ParkDto } from "./routes/parks.ts";

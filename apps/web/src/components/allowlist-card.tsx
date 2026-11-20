@@ -2,6 +2,7 @@
 
 import { toast } from "sonner";
 import { z } from "zod";
+import { showRefusal } from "@/components/form/show-refusal";
 import { useAppForm } from "@/components/form/use-app-form";
 import { LoadError } from "@/components/load-error";
 import { SectionCard } from "@/components/section-card";
@@ -61,20 +62,15 @@ function AllowEmailForm() {
 
   const form = useAppForm({
     defaultValues: { email: "" },
-    validators: {
-      onSubmit: allowEmailSchema,
-      onSubmitAsync: async ({ value }) => {
-        try {
-          await allowEmail.mutateAsync(value.email.trim());
-          return null;
-        } catch (error) {
-          return refusalFrom(error);
-        }
-      },
-    },
-    onSubmit: ({ value, formApi }) => {
-      toast.success(hu.admin.allowed(value.email.trim().toLowerCase()));
-      formApi.reset();
+    validators: { onSubmit: allowEmailSchema },
+    onSubmit: async ({ value, formApi }) => {
+      try {
+        const allowedEmail = await allowEmail.mutateAsync(value.email.trim());
+        toast.success(hu.admin.allowed(allowedEmail));
+        formApi.reset();
+      } catch (error) {
+        showRefusal(formApi, refusalFrom(error));
+      }
     },
   });
 

@@ -44,12 +44,13 @@ meg, ahol a `bun dev` fut, a backend soraiban:
 
 ```
 @eneredge/api:dev | --- mail to te@example.com ---
-@eneredge/api:dev | Subject: Erősítsd meg az e-mail-címed
+@eneredge/api:dev | Subject: Fejezd be a regisztrációt az EnerEdge-en
 @eneredge/api:dev | …
-@eneredge/api:dev | http://localhost:3000/api/auth/verify-email?token=…
+@eneredge/api:dev | http://localhost:3000/reset-password?token=…&email=te%40example.com&welcome=1
 ```
 
-Regisztráció után innen másold ki a megerősítő linket a böngészőbe.
+Regisztráció után innen másold ki a linket a böngészőbe: azon az oldalon állítod be a jelszavad,
+és ezzel be is lépsz.
 
 ## Platform-admin
 
@@ -86,9 +87,9 @@ apps/
     src/app.ts           az összes útvonal egy helyen
     src/contract.ts      amit a frontend láthat a backendből: csak típusok
     src/auth.ts          belépés, cégek, meghívók (Better Auth) beállítása
-    src/routes/          egy fájl = egy útvonalcsoport (health, me, parks, admin)
+    src/routes/          egy fájl = egy útvonalcsoport (health, config, account, me, parks, admin)
     src/middleware/      munkamenet- és cégtagság-ellenőrzés
-    test/                API-tesztek
+    test/                API-tesztek; a test/support/ a közös segédfüggvényeiké
   web/                 frontend: Next.js (App Router)
     src/app/             az oldalak; a mappák neve az oldal címe
     src/components/      saját komponensek
@@ -108,12 +109,24 @@ docs/                  a terv és a megvalósítási tervek
 
 ## Néhány szabály, amihez a kód tartja magát
 
-- **Bérlő-elszigetelés:** egy cég adatait érintő lekérdezés csak `OrgScope`-pal hívható, amelyet
-  kizárólag a tagság ellenőrzése állít elő ([`packages/db/src/scope.ts`](packages/db/src/scope.ts)).
-  Más cég erőforrására a válasz 404.
+- **Bérlő-elszigetelés:** a cégek adataihoz a kód a
+  [`packages/db/src/repositories/`](packages/db/src/repositories) függvényein át nyúl, és ezek
+  `OrgScope`-ot kérnek, amelyet kizárólag a tagság ellenőrzése állít elő
+  ([`packages/db/src/scope.ts`](packages/db/src/scope.ts)). Más cég erőforrására a válasz 404.
+  Ez megállapodás, nem a fordító által kikényszerített garancia: az adatbázis-kapcsolat közvetlenül
+  is elérhető, és a platform-admin függvényei (parkkorlát, engedélyezett címek) szándékosan nem
+  kérnek `OrgScope`-ot. Új lekérdezés ezért mindig a `repositories/` mappába kerüljön.
+- **Regisztráció:** a regisztráció nem állít be jelszót. A megadott címre egy link megy
+  (24 óráig érvényes, egyszer használható), és aki megnyitja, az állítja be a jelszót – más címével
+  regisztrálni így semmit nem ér. A válasz minden címre ugyanaz, ezért kívülről nem derül ki, kinek
+  van fiókja vagy meghívója ([`apps/api/src/routes/account.ts`](apps/api/src/routes/account.ts)).
+- **Szóhasználat:** a felületen „cég”; a kódban ugyanez `organization` (a Better Auth táblái és
+  végpontjai miatt), röviden `org`, a felülethez közeli nevekben `company`.
 - **Szövegek:** a felület minden szövege az [`apps/web/src/i18n/hu.ts`](apps/web/src/i18n/hu.ts)
   fájlban van; az API hibakódot ad, nem szöveget.
 - **Felület:** shadcn/ui komponensek, a szerveradat TanStack Queryvel, az űrlapok TanStack Formmal.
+  Egy űrlap az `onSubmit`-ban küldi el a kérést; ha a szerver elutasítja, a `showRefusal` teszi ki
+  az okot az űrlapra vagy az érintett mező alá.
 - **Olvashatóság:** kiírt, beszédes nevek; egy fájl egy felelősség; megjegyzés ott, ahol a
   „miért” nem látszik a kódból.
 - **Titkok:** csak a `.env` fájlban, amely nem kerül a repóba.

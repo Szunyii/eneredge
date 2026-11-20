@@ -1,6 +1,7 @@
 import { canManage, type Db, type OrgScope, resolveOrgScope } from "@eneredge/db";
 import type { MiddlewareHandler } from "hono";
 import { apiError } from "../errors.ts";
+import { isValidOrganizationSlug } from "../organization-slug.ts";
 import type { SessionVars } from "./session.ts";
 
 export type OrgVars = SessionVars & { scope: OrgScope };
@@ -13,9 +14,11 @@ export type OrgVars = SessionVars & { scope: OrgScope };
 export function requireOrg(db: Db): MiddlewareHandler<{ Variables: OrgVars }> {
   return async (context, next) => {
     const orgSlug = context.req.param("orgSlug");
-    const scope = orgSlug
-      ? await resolveOrgScope(db, { userId: context.get("user").id, orgSlug })
-      : null;
+    // A slug that no company could have needs no query — and must not reach one.
+    const scope =
+      orgSlug && isValidOrganizationSlug(orgSlug)
+        ? await resolveOrgScope(db, { userId: context.get("user").id, orgSlug })
+        : null;
     if (!scope) return apiError(context, 404, "not_found");
 
     context.set("scope", scope);

@@ -4,15 +4,9 @@ import { createAuth } from "../src/auth.ts";
 import { createMemoryMailer } from "../src/mail.ts";
 import { type OrgVars, requireManager, requireOrg } from "../src/middleware/org.ts";
 import { requireSession } from "../src/middleware/session.ts";
-import {
-  type Actor,
-  createOrg,
-  createTestApp,
-  inviteAndAccept,
-  signUpVerified,
-  type TestApp,
-  type TestOrganization,
-} from "./helpers.ts";
+import { signUpVerified } from "./support/accounts.ts";
+import { type Actor, createTestApp, type TestApp } from "./support/app.ts";
+import { createOrg, inviteAndAccept, type TestOrganization } from "./support/organizations.ts";
 
 // A tiny app with one readable and one manager-only route under a company,
 // to see the two middlewares on their own.

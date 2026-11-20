@@ -2,6 +2,7 @@
 
 import { toast } from "sonner";
 import { z } from "zod";
+import { showRefusal } from "@/components/form/show-refusal";
 import { useAppForm } from "@/components/form/use-app-form";
 import { LoadError } from "@/components/load-error";
 import { SectionCard } from "@/components/section-card";
@@ -68,22 +69,17 @@ function ParkLimitForm({ company }: { company: Company }) {
 
   const form = useAppForm({
     defaultValues: { parkLimit: String(company.parkLimit) },
-    validators: {
-      onSubmit: parkLimitSchema,
-      onSubmitAsync: async ({ value }) => {
-        try {
-          await setParkLimit.mutateAsync({
-            organizationId: company.id,
-            parkLimit: Number(value.parkLimit),
-          });
-          return null;
-        } catch (error) {
-          return refusalFrom(error);
-        }
-      },
-    },
-    onSubmit: () => {
-      toast.success(hu.admin.limitSaved);
+    validators: { onSubmit: parkLimitSchema },
+    onSubmit: async ({ value, formApi }) => {
+      try {
+        await setParkLimit.mutateAsync({
+          organizationId: company.id,
+          parkLimit: Number(value.parkLimit),
+        });
+        toast.success(hu.admin.limitSaved);
+      } catch (error) {
+        showRefusal(formApi, refusalFrom(error));
+      }
     },
   });
 

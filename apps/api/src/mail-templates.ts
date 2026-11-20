@@ -5,15 +5,39 @@ import type { MailMessage } from "./mail.ts";
 
 const SIGNATURE = "EnerEdge";
 
-export function verificationMail(input: { to: string; name: string; url: string }): MailMessage {
+/**
+ * The first mail to an address that asked for an account. Whoever opens its link
+ * sets the password, and by that shows the address is theirs. It goes to an
+ * address nobody has confirmed yet, so it carries nothing the requester typed.
+ */
+export function welcomeMail(input: { to: string; url: string }): MailMessage {
   return {
     to: input.to,
-    subject: "Erősítsd meg az e-mail-címed",
+    subject: "Fejezd be a regisztrációt az EnerEdge-en",
+    text: [
+      "Szia!",
+      "Ezzel az e-mail-címmel regisztráltak az EnerEdge-re. Ha te voltál, az alábbi linken állítsd be a jelszavad: ezzel megerősíted a címed, és be is lépsz.",
+      input.url,
+      "A link 24 óráig érvényes. Ha nem te regisztráltál, hagyd figyelmen kívül ezt a levelet: jelszó nélkül a fiókba senki nem tud belépni.",
+      SIGNATURE,
+    ].join("\n\n"),
+  };
+}
+
+/** For someone who tried to sign up with an address that already has an account. */
+export function alreadyRegisteredMail(input: {
+  to: string;
+  name: string;
+  url: string;
+}): MailMessage {
+  return {
+    to: input.to,
+    subject: "Már van EnerEdge-fiókod",
     text: [
       `Szia ${input.name}!`,
-      "Köszönjük, hogy regisztráltál az EnerEdge-re. Kattints az alábbi linkre: ezzel megerősíted az e-mail-címed, és be is lépsz.",
+      "Valaki – talán te – regisztrálni próbált ezzel az e-mail-címmel, de ehhez a címhez már tartozik fiók. Itt tudsz belépni:",
       input.url,
-      "Ha nem te regisztráltál, hagyd figyelmen kívül ezt a levelet.",
+      "Ha elfelejtetted a jelszavad, a belépő oldalon kérhetsz újat. Ha nem te voltál, nincs teendőd: a fiókod változatlan.",
       SIGNATURE,
     ].join("\n\n"),
   };
@@ -27,7 +51,7 @@ export function passwordResetMail(input: { to: string; name: string; url: string
       `Szia ${input.name}!`,
       "Új jelszót kértél az EnerEdge-fiókodhoz. Az alábbi linken tudod beállítani:",
       input.url,
-      "Ha nem te kérted, hagyd figyelmen kívül ezt a levelet: a jelszavad változatlan marad.",
+      "A link 24 óráig érvényes. Ha nem te kérted, hagyd figyelmen kívül ezt a levelet: a jelszavad változatlan marad.",
       SIGNATURE,
     ].join("\n\n"),
   };

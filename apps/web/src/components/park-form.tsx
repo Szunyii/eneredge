@@ -3,11 +3,12 @@
 import type { ParkDto } from "@eneredge/api";
 import type { ReactNode } from "react";
 import { z } from "zod";
+import { showRefusal } from "@/components/form/show-refusal";
 import { useAppForm } from "@/components/form/use-app-form";
 import { FieldGroup } from "@/components/ui/field";
 import { hu } from "@/i18n/hu";
 import { type FormRefusal, refusalFrom } from "@/lib/api-error";
-import { coordinate, formatDecimal, parkName, parseDecimal } from "@/lib/form-rules";
+import { coordinate, decimalInputValue, parkName, parseDecimal } from "@/lib/form-rules";
 import type { ParkValues } from "@/lib/parks";
 
 const DEFAULT_TIME_ZONE = "Europe/Budapest";
@@ -24,36 +25,33 @@ type ParkFormProps = {
   park?: ParkDto;
   submitLabel: string;
   /** Sends the values. A rejection with an ApiError is shown in the form. */
-  onSubmit: (values: ParkValues) => Promise<unknown>;
+  onSave: (values: ParkValues) => Promise<unknown>;
   /** A second action beside the submit button, e.g. "Cancel". */
   secondaryAction?: ReactNode;
 };
 
 /** The basic facts of a park: its name, where it is, and which time zone it lives in. */
-export function ParkForm({ park, submitLabel, onSubmit, secondaryAction }: ParkFormProps) {
+export function ParkForm({ park, submitLabel, onSave, secondaryAction }: ParkFormProps) {
   const form = useAppForm({
     defaultValues: {
       name: park?.name ?? "",
       // Coordinates are edited as text, so a decimal comma is as good as a point.
-      latitude: park ? formatDecimal(park.latitude) : "",
-      longitude: park ? formatDecimal(park.longitude) : "",
+      latitude: park ? decimalInputValue(park.latitude) : "",
+      longitude: park ? decimalInputValue(park.longitude) : "",
       timezone: park?.timezone ?? DEFAULT_TIME_ZONE,
     },
-    validators: {
-      onSubmit: parkSchema,
-      onSubmitAsync: async ({ value }): Promise<FormRefusal | null> => {
-        try {
-          await onSubmit({
-            name: value.name.trim(),
-            latitude: parseDecimal(value.latitude),
-            longitude: parseDecimal(value.longitude),
-            timezone: value.timezone,
-          });
-          return null;
-        } catch (error) {
-          return parkRefusal(error);
-        }
-      },
+    validators: { onSubmit: parkSchema },
+    onSubmit: async ({ value, formApi }) => {
+      try {
+        await onSave({
+          name: value.name.trim(),
+          latitude: parseDecimal(value.latitude),
+          longitude: parseDecimal(value.longitude),
+          timezone: value.timezone,
+        });
+      } catch (error) {
+        showRefusal(formApi, parkRefusal(error));
+      }
     },
   });
 

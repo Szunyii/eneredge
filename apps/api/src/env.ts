@@ -115,6 +115,10 @@ export function loadEnv(source: Source = process.env): Env {
     .filter((email) => email !== "");
 
   const SIGNUP_MODE = oneOf("SIGNUP_MODE", ["open", "allowlist"] as const, "open");
+  // Left out on a deployed system, it must not quietly mean "anyone can sign up".
+  if (NODE_ENV === "production" && read("SIGNUP_MODE") === undefined) {
+    problems.push("SIGNUP_MODE must be set in production: open or allowlist");
+  }
 
   if (problems.length > 0) {
     throw new Error(

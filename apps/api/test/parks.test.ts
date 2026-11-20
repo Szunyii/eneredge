@@ -1,20 +1,9 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import type { OrganizationOverview } from "@eneredge/db";
-import {
-  type Actor,
-  createCompany,
-  createOrg,
-  createPark,
-  createTestApp,
-  json,
-  type ParkBody,
-  parksPath,
-  request,
-  signUpVerified,
-  type TestApp,
-  uniqueEmail,
-  VALID_PARK,
-} from "./helpers.ts";
+import { signUpVerified, uniqueEmail } from "./support/accounts.ts";
+import { type Actor, createTestApp, json, request, type TestApp } from "./support/app.ts";
+import { createCompany, createOrg } from "./support/organizations.ts";
+import { createPark, type ParkBody, parksPath, VALID_PARK } from "./support/parks.ts";
 
 const adminEmail = uniqueEmail();
 let testApp: TestApp;
@@ -81,6 +70,27 @@ test("list is ordered by name, case-insensitively", async () => {
     await request(testApp, owner, "GET", parksPath(organization)),
   );
   expect(parks.map((park) => park.name)).toEqual(["Alfa", "béta", "csillag"]);
+});
+
+test("list follows the Hungarian alphabet, accents included", async () => {
+  const { owner, organization } = await createCompany(testApp);
+  for (const name of ["Zala", "Árok", "alma", "Őrség", "béta", "Érd", "Úrhida", "Ond"]) {
+    await createPark(testApp, owner, organization, { name });
+  }
+
+  const { parks } = await json<{ parks: ParkBody[] }>(
+    await request(testApp, owner, "GET", parksPath(organization)),
+  );
+  expect(parks.map((park) => park.name)).toEqual([
+    "alma",
+    "Árok",
+    "béta",
+    "Érd",
+    "Ond",
+    "Őrség",
+    "Úrhida",
+    "Zala",
+  ]);
 });
 
 test("patch changes only the given fields and advances updatedAt", async () => {

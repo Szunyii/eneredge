@@ -5,7 +5,9 @@ import { createAuth } from "./auth.ts";
 import type { Env } from "./env.ts";
 import { apiError } from "./errors.ts";
 import type { Mailer } from "./mail.ts";
+import { accountRoutes } from "./routes/account.ts";
 import { adminRoutes } from "./routes/admin.ts";
+import { configRoutes } from "./routes/config.ts";
 import { healthRoutes } from "./routes/health.ts";
 import { meRoutes } from "./routes/me.ts";
 import { parkRoutes } from "./routes/parks.ts";
@@ -21,12 +23,14 @@ export function createApp(deps: AppDeps) {
 
   const api = new Hono()
     .route("/health", healthRoutes(deps))
+    .route("/config", configRoutes(deps))
+    .route("/account", accountRoutes(deps, auth))
     .route("/me", meRoutes(deps, auth))
     .route("/admin", adminRoutes(deps, auth))
     .route("/orgs/:orgSlug/parks", parkRoutes(deps, auth));
 
   const app = new Hono()
-    // Sign-up, sign-in, sessions, companies and invitations are the auth library's own endpoints.
+    // Sign-in, passwords, sessions, companies and invitations are the auth library's own endpoints.
     .on(["GET", "POST"], "/api/auth/*", (context) => auth.handler(context.req.raw))
     .route("/api", api);
 

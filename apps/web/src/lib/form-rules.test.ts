@@ -2,8 +2,9 @@ import { expect, test } from "bun:test";
 import { hu } from "@/i18n/hu";
 import {
   coordinate,
+  decimalInputValue,
+  displayName,
   emailAddress,
-  formatDecimal,
   newPassword,
   organizationSlug,
   parkName,
@@ -24,6 +25,12 @@ test("an empty or blank text is asked for", () => {
   expect(messageFor(requiredText, "")).toBe(hu.fieldErrors.required);
   expect(messageFor(requiredText, "   ")).toBe(hu.fieldErrors.required);
   expect(messageFor(requiredText, "Vega")).toBeNull();
+});
+
+test("the name of a person or a company may be 100 characters long", () => {
+  expect(messageFor(displayName, "x".repeat(100))).toBeNull();
+  expect(messageFor(displayName, "x".repeat(101))).toBe(hu.fieldErrors.too_long);
+  expect(messageFor(displayName, "  ")).toBe(hu.fieldErrors.required);
 });
 
 test("an e-mail address must look like one", () => {
@@ -59,11 +66,25 @@ test("a coordinate accepts a decimal comma or point within its range", () => {
   expect(messageFor(latitude, "-90,5")).toBe(hu.fieldErrors.out_of_range);
 });
 
-test("decimals are read and written the Hungarian way", () => {
+test("a decimal is read with a comma or a point", () => {
   expect(parseDecimal(" 19,0402 ")).toBe(19.0402);
   expect(parseDecimal("19.0402")).toBe(19.0402);
-  expect(formatDecimal(19.0402)).toBe("19,0402");
-  expect(formatDecimal(47)).toBe("47");
+  expect(parseDecimal("-0,5")).toBe(-0.5);
+  expect(parseDecimal("47")).toBe(47);
+});
+
+test.each(["0x1F", "1e1", "47.", ",5", "4 7", "47,49,79", "Infinity", ""])(
+  "%p is not a decimal",
+  (text) => {
+    expect(Number.isNaN(parseDecimal(text))).toBe(true);
+  },
+);
+
+test("a number put into an input comes back as the very same number", () => {
+  for (const stored of [19.0402, 47, -0.5, 47.49791234567, 1e-7]) {
+    expect(parseDecimal(decimalInputValue(stored))).toBe(stored);
+  }
+  expect(decimalInputValue(19.0402)).toBe("19,0402");
 });
 
 test("a park name may be 80 characters long", () => {

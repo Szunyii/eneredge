@@ -116,14 +116,14 @@ A sorrend: **M1 → P → M1b → M2 → M3 → M4 → M5 → M6 → M7 → M8.*
 **Mit építek**
 - Monorepo Bun workspace-szel: `apps/web` (Next.js frontend), `apps/api` (Hono backend), `packages/db`. Lint és formázás Biome-mal, típusellenőrzés `bun check`-kel, minden teszt `bun test`-tel; helyi adatbázis Compose-ból.
 - Migrációk Drizzle-lel. Az első migráció bekapcsolja a TimescaleDB-kiterjesztést, hogy a fejlesztői és a teszt-adatbázis kezdettől olyan legyen, mint az éles.
-- Auth (Better Auth): regisztráció e-mail-címmel és jelszóval, e-mail-megerősítés, jelszó-visszaállítás; szervezet, tagok, meghívás e-mailben.
+- Auth (Better Auth): regisztráció e-mail-címmel – a jelszót a felhasználó a levélben kapott linken állítja be, ami egyben az e-mail-cím megerősítése –, jelszó-visszaállítás; szervezet, tagok, meghívás e-mailben. *(Az M1 zárófelülvizsgálata után módosítva: eredetileg a regisztráció kérte a jelszót, és külön megerősítő levél ment. Így viszont más címével előre regisztrálva a fiók elfoglalható lett volna.)*
 - Két regisztrációs mód: nyílt, illetve meghívásos, amelyben csak az engedélyezett címek, a meghívottak és a platform-admin regisztrálhatnak.
 - A bérlő-elszigetelés közös rétege, park CRUD cégenkénti parkkorláttal, audit napló.
 - A felület váza magyarul, kiszervezett szövegekkel, az `emil-design-eng` skillel: belépés és regisztráció, cég létrehozása, Parkok, Park, Beállítások (cég, tagok, meghívók), üres Jelzések oldal, és az Admin oldal első két funkciója (engedélyezett regisztrációs címek, cégenkénti parkkorlát).
 
 **Kész, ha**
 - Tesztek igazolják: más cég parkjára minden kérés 404; a tag (`member`) nem módosíthat; az eltávolított tag a következő kérésnél már nem fér hozzá; a park-műveletek audit sort írnak; hibás bemenetre 4xx jön, nem 500; meghívásos módban ismeretlen cím nem regisztrálhat; a 11. park csak emelt korláttal vehető fel.
-- Böngészős végigpróba zöld: regisztráció → e-mail-megerősítés → cég → park felvétele → kolléga meghívása és belépése, csak a felületről.
+- Böngészős végigpróba zöld: regisztráció → jelszó beállítása a levélben kapott linken → cég → park felvétele → kolléga meghívása és belépése, csak a felületről.
 
 **Kell hozzá:** tőled semmi a jóváhagyáson túl. Fejlesztés közben valódi e-mail nem megy ki, a levelek a konzolra íródnak.
 
@@ -206,7 +206,7 @@ A próba kódja nem kerül a termékbe; a tanulsága igen. A próba után a VPS-
 **Cél:** egy park a varázslóból, a szerveren végzett kézi lépés nélkül beköthető, és a parkok egymástól el vannak szigetelve.
 
 **Mit építek**
-- **Először a minimális élesítés** a Hostinger VPS-en: Compose (adatbázis, migráció, web, api, poller), Caddy TLS-sel az `app.eneredge.tech` címen (az `/api/*` kéréseket az API-hoz, a többit a Next.js-hez irányítja), tűzfal (a Hostinger tűzfalán a tunnelek UDP porttartománya nyitva), napi mentés egy Hostingertől független tárhelyre, külső figyelő a `/api/health`-re. A levelek a `no-reply@eneredge.tech` postafiókon át mennek. A router-konfig végpontja a `hub.eneredge.tech`. A hub-kulcsok titkosító kulcsa az adatbázis-mentéstől külön van mentve. A kitett rendszer meghívásos módban fut az M7-ig.
+- **Először a minimális élesítés** a Hostinger VPS-en: Compose (adatbázis, migráció, web, api, poller), Caddy TLS-sel az `app.eneredge.tech` címen (az `/api/*` kéréseket az API-hoz, a többit a Next.js-hez irányítja), tűzfal (a Hostinger tűzfalán a tunnelek UDP porttartománya nyitva), napi mentés egy Hostingertől független tárhelyre, külső figyelő a `/api/health`-re. A levelek a `no-reply@eneredge.tech` postafiókon át mennek. A router-konfig végpontja a `hub.eneredge.tech`. A hub-kulcsok titkosító kulcsa az adatbázis-mentéstől külön van mentve. A kitett rendszer meghívásos módban fut az M7-ig. *(Az M1 zárófelülvizsgálatából:)* a nyilvános címre kerüléssel együtt jár a kéréskorlátozás a belépés, a jelszókérés és a regisztráció útvonalain – a saját `/api/account/sign-up` útvonalon is, amelyet a Better Auth beépített korlátja nem véd –, a látogató valódi IP-címének megbízható továbbítása a Caddy-től az API-ig, a biztonsági fejlécek, és az, hogy az API csak a helyi gépen figyeljen.
 - A teljes elszigetelés-teszt valódi WireGuard-interfészekkel, a P próba tanulságai alapján.
 - Tunnel-kezelés a pollerben: a `tunnel` tábla a kívánt állapot, a poller induláskor és változáskor ehhez igazítja az interfészeket, útvonalakat és tűzfalszabályokat; visszaírja az utolsó kézfogást, a forgalmat és a park routerének nyilvános címét.
 - Kulcsok: a hub privát kulcsát a poller állítja elő és titkosítva tárolja [J→]. A router privát kulcsa letöltéskor keletkezik és nem tárolódik; újabb letöltés csak új kulccsal lehetséges, a régi érvényét veszti.
@@ -308,7 +308,7 @@ A próba kódja nem kerül a termékbe; a tanulsága igen. A próba után a VPS-
 | Verziók | Bun 1.4.5 · Hono 4.13 · Drizzle 0.45 · Better Auth 1.7.26 · Zod 4 · React 19 · Next.js 16 · TanStack Query 5 · Tailwind 4 · uPlot 1.6 · PostgreSQL 18 + TimescaleDB 2.32.1 | A mai stabil kiadások; a pontos verziót a lockfile rögzíti. |
 | Azonosítók | uuidv7 a parknál, eszköznél, eseménynél | Időrendben rendezhető, és az URL-ből nem derül ki, hány park van a rendszerben. |
 | URL-ek | `/o/<cég>/parks/<park>` | A megosztott link attól függetlenül működik, melyik cég van éppen kiválasztva. |
-| Belépés | e-mail + jelszó (legalább 10 karakter), kötelező e-mail-megerősítés | Külső szolgáltató nélkül működik. |
+| Belépés | e-mail + jelszó (legalább 10 karakter); a jelszó csak a levélben kapott, 24 óráig érvényes linken állítható be, ez egyben a cím megerősítése | Külső szolgáltató nélkül működik, és más címével regisztrálni semmit nem ér. |
 | Platform-admin | a beállításban felsorolt, megerősített e-mail-címek | Kevés feladata van (profilok jóváhagyása, regisztráció engedélyezése, parkkorlát), ehhez nem kell felhasználókezelő felület. |
 | Hibák | az API hibakódot ad, a magyar szöveg a felület szótárában van | Minden szöveg egy helyen van, és később fordítható. |
 | Tunnel-kiosztás | N a legkisebb szabad sorszám; port 51820+N; hub cím = tartomány + 2N, router cím = tartomány + 2N+1; routing tábla 1000+N | Megegyezik a terved példájával: N=7 → 51827, 10.203.0.14, 1007. |

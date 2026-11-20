@@ -4,17 +4,19 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { AuthCard, AuthFrame, textLinkClass } from "@/components/auth-layout";
+import { showRefusal } from "@/components/form/show-refusal";
 import { useAppForm } from "@/components/form/use-app-form";
 import { RequireAuth } from "@/components/require-auth";
 import { FieldGroup } from "@/components/ui/field";
 import { Unbroken } from "@/components/unbroken";
 import { hu } from "@/i18n/hu";
+import type { FormRefusal } from "@/lib/api-error";
 import { authClient } from "@/lib/auth-client";
-import { organizationSlug, requiredText } from "@/lib/form-rules";
+import { displayName, organizationSlug } from "@/lib/form-rules";
 import { refreshSession } from "@/lib/session";
 import { slugify } from "@/lib/slug";
 
-const companySchema = z.object({ name: requiredText, slug: organizationSlug });
+const companySchema = z.object({ name: displayName, slug: organizationSlug });
 
 export default function OnboardingPage() {
   return (
@@ -33,17 +35,16 @@ function CreateCompanyForm() {
 
   const form = useAppForm({
     defaultValues: { name: "", slug: "" },
-    validators: {
-      onSubmit: companySchema,
-      onSubmitAsync: async ({ value }) => {
-        const result = await authClient.organization.create({
-          name: value.name.trim(),
-          slug: value.slug,
-        });
-        return result.error ? companyRefusal(result.error.code) : null;
-      },
-    },
-    onSubmit: async ({ value }) => {
+    validators: { onSubmit: companySchema },
+    onSubmit: async ({ value, formApi }) => {
+      const result = await authClient.organization.create({
+        name: value.name.trim(),
+        slug: value.slug,
+      });
+      if (result.error) {
+        showRefusal(formApi, companyRefusal(result.error.code));
+        return;
+      }
       await refreshSession(queryClient);
       router.replace(`/o/${value.slug}/parks`);
     },
@@ -110,10 +111,11 @@ function CreateCompanyForm() {
 }
 
 /** The server's refusal, put where the person can act on it. */
-function companyRefusal(code: string | undefined) {
+function companyRefusal(code: string | undefined): FormRefusal {
   if (code === "ORGANIZATION_ALREADY_EXISTS" || code === "ORGANIZATION_SLUG_ALREADY_TAKEN") {
     return { fields: { slug: hu.onboarding.slugTaken } };
   }
   if (code === "INVALID_SLUG") return { fields: { slug: hu.onboarding.slugInvalid } };
+  if (code === "INVALID_NAME") return { fields: { name: hu.fieldErrors.invalid } };
   return { form: hu.errors.internal, fields: {} };
 }

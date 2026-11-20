@@ -74,19 +74,28 @@ export function pathOf(link: string): string {
   return `${url.pathname}${url.search}`;
 }
 
-async function fillSignUpForm(page: Page, user: NewUser): Promise<void> {
+/** Fills in and sends the sign-up form the page is showing. Ends on the "check your mail" card. */
+export async function askForAccount(page: Page, user: NewUser): Promise<void> {
   await page.fill(hu.auth.name, user.name);
   await page.fill(hu.auth.email, user.email);
-  await page.fill(hu.auth.password, user.password);
   await page.click(hu.auth.createAccount);
   await page.waitForText(hu.auth.checkEmailTitle);
 }
 
-/** Signs up on the sign-up page, then opens the confirmation link from the mail. */
-export async function signUpAndVerify(page: Page, user: NewUser): Promise<void> {
+/** Opens the link of the mail that finishes a sign-up and sets the password there. */
+export async function setPasswordThroughMail(page: Page, user: NewUser): Promise<void> {
+  await page.goto(pathOf(await latestLinkFor(user.email, "/reset-password")));
+  await page.fill(hu.auth.password, user.password);
+  await page.click(hu.auth.savePasswordAndSignIn);
+  // Signed in once the page has moved on from the password form.
+  await page.waitForPath(/^\/(?!reset-password)/);
+}
+
+/** Signs up on the sign-up page and sets the password through the mailed link. Ends signed in. */
+export async function signUpAndSetPassword(page: Page, user: NewUser): Promise<void> {
   await page.goto("/sign-up");
-  await fillSignUpForm(page, user);
-  await page.goto(pathOf(await latestLinkFor(user.email, "verify-email")));
+  await askForAccount(page, user);
+  await setPasswordThroughMail(page, user);
 }
 
 /** Fills in and sends the sign-in form the page is showing. */
@@ -107,13 +116,21 @@ export async function createOrganization(page: Page, name: string): Promise<stri
   return slug;
 }
 
-/** Follows the invitation mail as someone without an account: sign up, confirm, accept. */
+/** Invites an address as a member, on the settings page of the company. */
+export async function inviteColleague(page: Page, slug: string, email: string): Promise<void> {
+  await page.goto(`/o/${slug}/settings`);
+  await page.fill(hu.settings.inviteEmail, email);
+  await page.click(hu.settings.invite);
+  await page.waitForText(email);
+}
+
+/** Follows the invitation mail as someone without an account: sign up, set a password, accept. */
 export async function acceptInvitationAsNewUser(page: Page, user: NewUser): Promise<void> {
   await page.goto(pathOf(await latestLinkFor(user.email, "/accept-invitation/")));
   await page.click(hu.invitation.signUp);
-  await fillSignUpForm(page, user);
-  // The confirmation link brings the new user back to the invitation.
-  await page.goto(pathOf(await latestLinkFor(user.email, "verify-email")));
+  await askForAccount(page, user);
+  // The link in the mail brings the new user back to the invitation.
+  await setPasswordThroughMail(page, user);
   await page.click(hu.invitation.accept);
   await page.waitForPath(/^\/o\/[^/]+\/parks$/);
 }
@@ -125,7 +142,7 @@ export async function ownerWithCompany(
 ): Promise<{ page: Page; user: NewUser; slug: string; companyName: string }> {
   const page = await open();
   const user = newUser();
-  await signUpAndVerify(page, user);
+  await signUpAndSetPassword(page, user);
   const slug = await createOrganization(page, companyName);
   return { page, user, slug, companyName };
 }
