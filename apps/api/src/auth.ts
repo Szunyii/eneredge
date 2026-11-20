@@ -6,7 +6,10 @@ import { organization } from "better-auth/plugins";
 import type { AppDeps } from "./app.ts";
 import type { Env } from "./env.ts";
 import type { Mailer } from "./mail.ts";
-import { passwordResetMail, verificationMail } from "./mail-templates.ts";
+import { invitationMail, passwordResetMail, verificationMail } from "./mail-templates.ts";
+import { isValidOrganizationSlug } from "./organization-slug.ts";
+
+const INVITATION_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
 
 /**
  * Everything about sign-in that does not need a database: how accounts work and
@@ -40,7 +43,38 @@ export function authOptions(deps: { env: Env; mailer: Mailer }) {
         void mailer.send(verificationMail({ to: user.email, name: user.name, url }));
       },
     },
-    plugins: [organization()],
+    plugins: [
+      organization({
+        creatorRole: "owner",
+        invitationExpiresIn: INVITATION_LIFETIME_SECONDS,
+        // Inviting an address again replaces the invitation it already holds.
+        cancelPendingInvitationsOnReInvite: true,
+        requireEmailVerificationOnInvitation: true,
+        // Deleting a company would take its parks with it. Until there is a
+        // deliberate flow for that, nobody can do it through the API.
+        disableOrganizationDeletion: true,
+        sendInvitationEmail: async (invitation) => {
+          void mailer.send(
+            invitationMail({
+              to: invitation.email,
+              inviterName: invitation.inviter.user.name,
+              organizationName: invitation.organization.name,
+              url: `${env.APP_URL}/accept-invitation/${invitation.id}`,
+            }),
+          );
+        },
+        organizationHooks: {
+          beforeCreateOrganization: async ({ organization: newOrganization }) => {
+            if (!isValidOrganizationSlug(newOrganization.slug ?? "")) throw invalidSlug();
+          },
+          beforeUpdateOrganization: async ({ organization: changes }) => {
+            if (changes.slug !== undefined && !isValidOrganizationSlug(changes.slug)) {
+              throw invalidSlug();
+            }
+          },
+        },
+      }),
+    ],
   } satisfies BetterAuthOptions;
 }
 
@@ -93,5 +127,12 @@ function signUpClosed() {
   return new APIError("FORBIDDEN", {
     code: "SIGNUP_CLOSED",
     message: "Sign-up is by invitation only.",
+  });
+}
+
+function invalidSlug() {
+  return new APIError("BAD_REQUEST", {
+    code: "INVALID_SLUG",
+    message: "The slug must be 3-40 lower-case letters, digits and single hyphens.",
   });
 }

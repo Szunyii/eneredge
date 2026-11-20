@@ -1,3 +1,4 @@
+import { memberships } from "@eneredge/db";
 import { Hono } from "hono";
 import type { AppDeps } from "../app.ts";
 import type { Auth } from "../auth.ts";
@@ -11,8 +12,9 @@ export type Me = {
 
 /** GET /api/me — the first thing the web app asks after loading. */
 export function meRoutes(deps: AppDeps, auth: Auth) {
-  return new Hono<{ Variables: SessionVars }>().get("/", requireSession(auth), (context) => {
+  return new Hono<{ Variables: SessionVars }>().get("/", requireSession(auth), async (context) => {
     const user = context.get("user");
+    const companies = await memberships.listForUser(deps.db, user.id);
     const me: Me = {
       user: {
         id: user.id,
@@ -20,7 +22,12 @@ export function meRoutes(deps: AppDeps, auth: Auth) {
         email: user.email,
         isPlatformAdmin: isPlatformAdmin(deps.env, user),
       },
-      organizations: [],
+      organizations: companies.map((company) => ({
+        id: company.organizationId,
+        name: company.name,
+        slug: company.slug,
+        role: company.role,
+      })),
     };
     return context.json(me, 200);
   });
