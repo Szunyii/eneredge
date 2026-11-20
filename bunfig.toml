@@ -1,0 +1,4 @@
+[run]
+# Package binaries with a `node` shebang (drizzle-kit, biome) run under Bun,
+# so no Node.js install is needed locally, in CI or on the server.
+bun = true

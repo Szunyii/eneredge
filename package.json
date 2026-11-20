@@ -1,0 +1,26 @@
+{
+  "name": "eneredge",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun --hot apps/api/src/index.ts",
+    "start": "NODE_ENV=production bun apps/api/src/index.ts",
+    "test": "bun test",
+    "check": "bun run --filter '*' check",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "db:generate": "bun run --cwd packages/db generate",
+    "db:migrate": "bun run --cwd packages/db migrate",
+    "e2e": "bun e2e/run.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.8",
+    "@types/bun": "^1.4.5",
+    "bun-plugin-tailwind": "^0.1.2",
+    "typescript": "^7"
+  }
+}
