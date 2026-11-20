@@ -98,6 +98,7 @@ Emlékezetből nem pótolom őket. Egy fejből írt regisztertérkép éppen az 
 - A frontend Next.js, ugyanazzal a főverzióval, mint a marketingoldal. A frontend (`apps/web`) és a backend (`apps/api`) külön mappában van, és külön processzben fut.
 - A VPS root hozzáférését és a GitHub-repót megadtad; a repó `origin` néven be van kötve.
 - A kód és a mappaszerkezet embernek is jól olvasható legyen: beszédes változó- és fájlnevek, áttekinthető tagolás.
+- A Next.js alkalmazásban shadcn/ui komponensek, a szerveradathoz TanStack Query, az űrlapokhoz TanStack Form.
 
 **Egyéb**
 - Szerepek: a `member` mindent lát, de parkot felvenni, módosítani, törölni és tagot meghívni csak az `owner` és az `admin` tud.
@@ -311,7 +312,7 @@ A próba kódja nem kerül a termékbe; a tanulsága igen. A próba után a VPS-
 | Platform-admin | a beállításban felsorolt, megerősített e-mail-címek | Kevés feladata van (profilok jóváhagyása, regisztráció engedélyezése, parkkorlát), ehhez nem kell felhasználókezelő felület. |
 | Hibák | az API hibakódot ad, a magyar szöveg a felület szótárában van | Minden szöveg egy helyen van, és később fordítható. |
 | Tunnel-kiosztás | N a legkisebb szabad sorszám; port 51820+N; hub cím = tartomány + 2N, router cím = tartomány + 2N+1; routing tábla 1000+N | Megegyezik a terved példájával: N=7 → 51827, 10.203.0.14, 1007. |
-| Felület | Next.js (App Router) [D]; mellette TanStack Query és típusos API-kliens; a marketingoldal színei és betűtípusa | A Next.js a te döntésed. A felület az adatot kizárólag az API-n át éri el, a backendből csak típust importál – így a két rész tisztán elválik. |
+| Felület | Next.js (App Router), shadcn/ui komponensek, TanStack Query a szerveradathoz és TanStack Form az űrlapokhoz [D]; mellette típusos API-kliens; a marketingoldal színei és betűtípusa | A Next.js a te döntésed. A felület az adatot kizárólag az API-n át éri el, a backendből csak típust importál – így a két rész tisztán elválik. |
 
 ## 4. A „kudarc lenne akkor is" pontok őrei
 

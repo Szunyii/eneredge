@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { Providers } from "@/components/providers";
 import { hu } from "@/i18n/hu";
 // Archivo with its width axis, served by this app (latin and latin-ext subsets).
 import "@fontsource-variable/archivo/wdth.css";
@@ -19,7 +20,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="hu">
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

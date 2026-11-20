@@ -9,6 +9,9 @@ export const hu = {
   common: {
     appName: "EnerEdge",
     description: "Naperőművek felügyelete helyszíni eszköz nélkül.",
+    contactEmail: "info@eneredge.tech",
+    retry: "Próbáld újra",
+    signOut: "Kilépés",
   },
   nav: {
     main: "Fő navigáció",
@@ -19,11 +22,85 @@ export const hu = {
     admin: "Admin",
   },
   auth: {
+    // Fields shared by the forms
+    email: "E-mail-cím",
+    password: "Jelszó",
+    name: "Neved",
+    passwordHint: "Legalább 10 karakter.",
+    passwordTooShort: "A jelszó legalább 10 karakter legyen.",
+    invalidEmail: "Ez nem tűnik érvényes e-mail-címnek.",
+
+    // Sign-in
     signInTitle: "Belépés",
+    signIn: "Belépés",
+    forgotPassword: "Elfelejtetted a jelszavad?",
+    noAccountYet: "Nincs még fiókod?",
+    signUpLink: "Regisztrálj",
+    invalidCredentials: "Hibás e-mail-cím vagy jelszó.",
+    emailNotVerified:
+      "Még nem erősítetted meg az e-mail-címed. Most küldtünk egy új levelet a megerősítő linkkel.",
+    verificationFailed:
+      "A megerősítő link lejárt, vagy már felhasználtad. Lépj be, és küldünk egy újat.",
+
+    // Sign-up
     signUpTitle: "Regisztráció",
+    signUpLead: "Hozz létre egy fiókot, utána felveheted a céged és a parkjaidat.",
+    createAccount: "Fiók létrehozása",
+    haveAccount: "Van már fiókod?",
+    signInLink: "Lépj be",
+    signupClosed:
+      "A regisztráció jelenleg meghívásos. Ha szeretnéd kipróbálni az EnerEdge-et, írj nekünk: info@eneredge.tech",
+
+    // After sign-up
+    checkEmailTitle: "Nézd meg a leveleidet",
+    checkEmailSentTo: "Küldtünk egy levelet ide:",
+    checkEmailSent: "Küldtünk egy levelet.",
+    checkEmailWhatNext: "A benne lévő linkre kattintva megerősíted a címed, és be is lépsz.",
+    resend: "Levél újraküldése",
+    resent: "Elküldtük újra. Nézd meg a levélszemét mappát is.",
+
+    // Forgotten password
+    forgotTitle: "Elfelejtett jelszó",
+    forgotLead:
+      "Add meg az e-mail-címed, és küldünk egy linket, amellyel új jelszót állíthatsz be.",
+    sendResetLink: "Link küldése",
+    resetLinkSent: "Ha van fiók ezzel a címmel, elküldtük a levelet. Nézd meg a leveleidet.",
+    backToSignIn: "Vissza a belépéshez",
+
+    // New password
+    resetTitle: "Új jelszó beállítása",
+    newPassword: "Új jelszó",
+    saveNewPassword: "Jelszó mentése",
+    resetDone: "Az új jelszavad beállítva. Lépj be vele.",
+    resetLinkInvalid: "Ez a link lejárt, vagy már felhasználtad.",
+    requestNewLink: "Kérj új linket",
   },
-  onboarding: {},
-  parks: {},
+  onboarding: {
+    title: "Hozd létre a céged",
+    lead: "A parkjaid egy céghez tartoznak. Később a kollégáidat is meghívhatod ide.",
+    companyName: "Cégnév",
+    slug: "Azonosító",
+    slugHint: "A céged oldalainak címe ezzel kezdődik majd:",
+    slugInvalid: "3–40 karakter lehet: kisbetű, szám és kötőjel.",
+    slugTaken: "Ez az azonosító már foglalt. Válassz másikat.",
+    create: "Cég létrehozása",
+  },
+  invitation: {
+    title: "Meghívó",
+    signedOutLead:
+      "Meghívtak egy céghez az EnerEdge-en. Az elfogadáshoz lépj be – ha még nincs fiókod, regisztrálj azzal az e-mail-címmel, amelyre a meghívót kaptad.",
+    signUp: "Regisztráció",
+    signIn: "Belépés",
+    lead: (inviterEmail: string, organizationName: string) =>
+      `${inviterEmail} meghívott ehhez a céghez: ${organizationName}.`,
+    accept: "Meghívó elfogadása",
+    invalid: "Ez a meghívó nem érvényes: lejárt, visszavonták, vagy nem ehhez a fiókhoz szól.",
+    goHome: "Tovább a kezdőlapra",
+  },
+  parks: {
+    title: "Parkok",
+    empty: "Még nincs parkod.",
+  },
   park: {},
   settings: {},
   alerts: {},

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { AppShell } from "@/components/app-shell";
+import { OrganizationGate } from "@/components/organization-gate";
+import { RequireAuth } from "@/components/require-auth";
 
 type OrganizationLayoutProps = {
   children: ReactNode;
@@ -9,5 +10,9 @@ type OrganizationLayoutProps = {
 /** Every page of a company shares the same frame; the company comes from the address. */
 export default async function OrganizationLayout({ children, params }: OrganizationLayoutProps) {
   const { orgSlug } = await params;
-  return <AppShell orgSlug={orgSlug}>{children}</AppShell>;
+  return (
+    <RequireAuth>
+      <OrganizationGate orgSlug={orgSlug}>{children}</OrganizationGate>
+    </RequireAuth>
+  );
 }
