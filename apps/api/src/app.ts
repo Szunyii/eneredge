@@ -1,5 +1,6 @@
 import type { Db } from "@eneredge/db";
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { createAuth } from "./auth.ts";
 import type { Env } from "./env.ts";
 import { apiError } from "./errors.ts";
@@ -31,6 +32,10 @@ export function createApp(deps: AppDeps) {
 
   app.notFound((context) => apiError(context, 404, "not_found"));
   app.onError((error, context) => {
+    // A request body that is not JSON is the sender's mistake, not ours.
+    if (error instanceof HTTPException && error.status === 400) {
+      return apiError(context, 400, "validation");
+    }
     // The cause goes to the log; the client only learns that something broke.
     console.error(error);
     return apiError(context, 500, "internal");

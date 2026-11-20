@@ -1,12 +1,12 @@
 import { type Park, ParkLimitReachedError, ParkNameTakenError, parks } from "@eneredge/db";
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { z } from "zod";
 import type { AppDeps } from "../app.ts";
 import type { Auth } from "../auth.ts";
 import { apiError } from "../errors.ts";
 import { type OrgVars, requireManager, requireOrg } from "../middleware/org.ts";
 import { requireSession } from "../middleware/session.ts";
-import { validateJsonBody } from "../validation.ts";
+import { jsonBody } from "../validation.ts";
 
 /** A park as the API shows it. */
 export type ParkDto = {
@@ -48,12 +48,9 @@ export function parkRoutes(deps: AppDeps, auth: Auth) {
       return context.json({ parks: found.map(toParkDto) }, 200);
     })
 
-    .post("/", requireManager(), async (context) => {
-      const body = await validateJsonBody(context, parkInputSchema);
-      if (!body.ok) return body.response;
-
+    .post("/", requireManager(), jsonBody(parkInputSchema), async (context) => {
       try {
-        const created = await parks.create(db, context.get("scope"), body.value);
+        const created = await parks.create(db, context.get("scope"), context.req.valid("json"));
         return context.json({ park: toParkDto(created) }, 201);
       } catch (error) {
         return conflictResponse(context, error);
@@ -66,13 +63,11 @@ export function parkRoutes(deps: AppDeps, auth: Auth) {
       return context.json({ park: toParkDto(found) }, 200);
     })
 
-    .patch("/:parkId", requireManager(), async (context) => {
-      const body = await validateJsonBody(context, parkPatchSchema);
-      if (!body.ok) return body.response;
-
+    .patch("/:parkId", requireManager(), jsonBody(parkPatchSchema), async (context) => {
       try {
         const parkId = context.req.param("parkId");
-        const updated = await parks.update(db, context.get("scope"), parkId, body.value);
+        const changes = context.req.valid("json");
+        const updated = await parks.update(db, context.get("scope"), parkId, changes);
         if (!updated) return apiError(context, 404, "not_found");
         return context.json({ park: toParkDto(updated) }, 200);
       } catch (error) {
@@ -103,7 +98,7 @@ function toParkDto(park: Park): ParkDto {
 }
 
 /** The two refusals a park change can run into; anything else is not ours to answer. */
-function conflictResponse(context: Parameters<typeof apiError>[0], error: unknown): Response {
+function conflictResponse(context: Context, error: unknown) {
   if (error instanceof ParkNameTakenError) return apiError(context, 409, "name_taken");
   if (error instanceof ParkLimitReachedError) return apiError(context, 409, "park_limit_reached");
   throw error;

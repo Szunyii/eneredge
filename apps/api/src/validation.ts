@@ -1,34 +1,20 @@
-import type { Context } from "hono";
+import { zValidator } from "@hono/zod-validator";
 import type { z } from "zod";
 import { apiError, type FieldErrorCode } from "./errors.ts";
 
-/** Either the checked value, or the 400 response to send back. */
-export type Validated<Value> = { ok: true; value: Value } | { ok: false; response: Response };
-
 /**
- * Reads the JSON body of a request and checks it against a schema. A body that is
- * not JSON, and every faulty field, becomes a 400 — never a 500.
+ * Middleware that checks the JSON body of a request against a schema. The handler
+ * reads the checked value with `context.req.valid("json")`, and the web app's
+ * typed client learns from it what the route accepts. A faulty body is answered
+ * here with a 400 and one code per faulty field; the handler never sees it.
  */
-export async function validateJsonBody<Schema extends z.ZodType>(
-  context: Context,
-  schema: Schema,
-): Promise<Validated<z.output<Schema>>> {
-  let body: unknown;
-  try {
-    body = await context.req.json();
-  } catch {
-    return { ok: false, response: apiError(context, 400, "validation") };
-  }
-
-  const result = schema.safeParse(body);
-  if (result.success) return { ok: true, value: result.data };
-
-  const fields = fieldErrors(result.error.issues, body);
-  const hasFieldErrors = Object.keys(fields).length > 0;
-  return {
-    ok: false,
-    response: apiError(context, 400, "validation", hasFieldErrors ? fields : undefined),
-  };
+export function jsonBody<Schema extends z.ZodType>(schema: Schema) {
+  return zValidator("json", schema, (result, context) => {
+    if (result.success) return;
+    const fields = fieldErrors(result.error.issues, result.data);
+    const hasFieldErrors = Object.keys(fields).length > 0;
+    return apiError(context, 400, "validation", hasFieldErrors ? fields : undefined);
+  });
 }
 
 /**

@@ -2,8 +2,9 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
+import { Toaster } from "@/components/ui/sonner";
 
-/** What every page needs around it: the cache of server data. */
+/** What every page needs around it: the cache of server data, and a place for confirmations. */
 export function Providers({ children }: { children: ReactNode }) {
   // One client per browser tab, created once.
   const [queryClient] = useState(
@@ -19,5 +20,11 @@ export function Providers({ children }: { children: ReactNode }) {
       }),
   );
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+      {/* Short confirmations of what just happened ("the park was saved"). */}
+      <Toaster position="bottom-center" />
+    </QueryClientProvider>
+  );
 }

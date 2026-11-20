@@ -57,8 +57,8 @@ function CreateCompanyForm() {
 
   async function signOut() {
     await authClient.signOut();
-    await refreshSession(queryClient);
-    router.replace("/sign-in");
+    // A full page load, so nothing of this user stays in memory for the next one.
+    window.location.assign("/sign-in");
   }
 
   return (

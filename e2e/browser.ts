@@ -11,6 +11,12 @@ const baseUrl = process.env.E2E_BASE_URL ?? "http://localhost:3100";
 const DEFAULT_TIMEOUT_MS = 5000;
 const POLL_INTERVAL_MS = 100;
 
+export type Viewport = { width: number; height: number };
+
+export const DESKTOP: Viewport = { width: 1280, height: 900 };
+/** A common phone, upright. */
+export const PHONE: Viewport = { width: 390, height: 844 };
+
 export type Page = {
   /** Loads an address of the app, given as a path (`/sign-in`). */
   goto(path: string): Promise<void>;
@@ -27,8 +33,10 @@ export type Page = {
   /** Waits until the path (with query string) matches. */
   waitForPath(pattern: RegExp, timeoutMs?: number): Promise<void>;
   fieldValue(label: string): Promise<string>;
-  /** The error message attached to the field (through aria-describedby), or null. */
+  /** The error message attached to the field right now (through aria-describedby), or null. */
   errorUnder(label: string): Promise<string | null>;
+  /** Waits until the field shows an error and returns its text. */
+  waitForErrorUnder(label: string, timeoutMs?: number): Promise<string>;
   screenshot(file: string): Promise<void>;
   close(): void;
 };
@@ -40,9 +48,9 @@ export type Page = {
  * for all of its views, so opening a page empties it; a scenario therefore plays
  * its people one after the other and never returns to an earlier page.
  */
-export async function openPage(): Promise<Page> {
+export async function openPage(viewport: Viewport = DESKTOP): Promise<Page> {
   const backend = browserBackend();
-  const view = new Bun.WebView({ width: 1280, height: 900, backend });
+  const view = new Bun.WebView({ ...viewport, backend });
   if (backend !== "webkit") {
     // Chrome's protocol is available once the view has loaded something.
     await view.navigate("about:blank");
@@ -152,6 +160,15 @@ export async function openPage(): Promise<Page> {
     async errorUnder(label) {
       await locate(field(label), `the field "${label}"`);
       return inPage<string | null>(`errorOf(${field(label)})`);
+    },
+
+    async waitForErrorUnder(label, timeoutMs = DEFAULT_TIMEOUT_MS) {
+      let error: string | null = null;
+      await waitUntil(`an error under the field "${label}"`, timeoutMs, async () => {
+        error = await inPage<string | null>(`errorOf(${field(label)})`);
+        return error !== null;
+      });
+      return error ?? "";
     },
 
     async screenshot(file) {

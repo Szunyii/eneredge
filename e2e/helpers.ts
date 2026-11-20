@@ -117,3 +117,26 @@ export async function acceptInvitationAsNewUser(page: Page, user: NewUser): Prom
   await page.click(hu.invitation.accept);
   await page.waitForPath(/^\/o\/[^/]+\/parks$/);
 }
+
+/** A new person who signs up and creates a company. Ends on the company's (empty) park list. */
+export async function ownerWithCompany(
+  open: () => Promise<Page>,
+  companyName = uniqueCompanyName(),
+): Promise<{ page: Page; user: NewUser; slug: string; companyName: string }> {
+  const page = await open();
+  const user = newUser();
+  await signUpAndVerify(page, user);
+  const slug = await createOrganization(page, companyName);
+  return { page, user, slug, companyName };
+}
+
+/** Adds a park through the form, starting anywhere inside the company. Ends on the park's page. */
+export async function addPark(page: Page, slug: string, name: string): Promise<void> {
+  await page.goto(`/o/${slug}/parks/new`);
+  await page.fill(hu.park.name, name);
+  await page.fill(hu.park.latitude, "47.4979");
+  await page.fill(hu.park.longitude, "19.0402");
+  await page.click(hu.park.create);
+  await page.waitForPath(new RegExp(`^/o/${slug}/parks/[0-9a-f-]{36}$`));
+  await page.waitForText(name);
+}

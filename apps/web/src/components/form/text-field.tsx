@@ -11,6 +11,8 @@ type TextFieldProps = Omit<
   "id" | "name" | "value" | "onChange" | "onBlur"
 > & {
   label: string;
+  /** Keeps the label for screen readers only — for a field whose column header already names it. */
+  hideLabel?: boolean;
   /** Help shown under the field while there is no error. */
   hint?: ReactNode;
 };
@@ -20,7 +22,7 @@ type TextFieldProps = Omit<
  * underneath. The message is tied to the input (aria-describedby), so a screen
  * reader reads it together with the field.
  */
-export function TextField({ label, hint, ...inputProps }: TextFieldProps) {
+export function TextField({ label, hideLabel = false, hint, ...inputProps }: TextFieldProps) {
   const field = useFieldContext<string>();
   const error = useSelector(field.store, (state) => firstMessage(state.meta.errors));
 
@@ -30,7 +32,9 @@ export function TextField({ label, hint, ...inputProps }: TextFieldProps) {
 
   return (
     <Field data-invalid={error ? true : undefined}>
-      <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
+      <FieldLabel htmlFor={inputId} className={hideLabel ? "sr-only" : undefined}>
+        {label}
+      </FieldLabel>
       <Input
         id={inputId}
         name={field.name}

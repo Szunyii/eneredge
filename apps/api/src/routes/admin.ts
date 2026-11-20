@@ -5,7 +5,7 @@ import type { AppDeps } from "../app.ts";
 import type { Auth } from "../auth.ts";
 import { apiError } from "../errors.ts";
 import { requirePlatformAdmin, requireSession, type SessionVars } from "../middleware/session.ts";
-import { validateJsonBody } from "../validation.ts";
+import { jsonBody } from "../validation.ts";
 
 const allowlistEntrySchema = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email()),
@@ -35,15 +35,10 @@ export function adminRoutes(deps: AppDeps, auth: Auth) {
         );
       })
 
-      .post("/signup-allowlist", async (context) => {
-        const body = await validateJsonBody(context, allowlistEntrySchema);
-        if (!body.ok) return body.response;
-
-        await signupAllowlist.add(deps.db, {
-          email: body.value.email,
-          addedBy: context.get("user").id,
-        });
-        return context.json({ email: body.value.email }, 201);
+      .post("/signup-allowlist", jsonBody(allowlistEntrySchema), async (context) => {
+        const { email } = context.req.valid("json");
+        await signupAllowlist.add(deps.db, { email, addedBy: context.get("user").id });
+        return context.json({ email }, 201);
       })
 
       .delete("/signup-allowlist/:email", async (context) => {
@@ -58,17 +53,15 @@ export function adminRoutes(deps: AppDeps, auth: Auth) {
         return context.json({ organizations }, 200);
       })
 
-      .patch("/orgs/:orgId", async (context) => {
-        const body = await validateJsonBody(context, parkLimitSchema);
-        if (!body.ok) return body.response;
-
+      .patch("/orgs/:orgId", jsonBody(parkLimitSchema), async (context) => {
+        const { parkLimit } = context.req.valid("json");
         const companyExists = await orgSettings.setParkLimit(deps.db, {
           organizationId: context.req.param("orgId"),
-          parkLimit: body.value.parkLimit,
+          parkLimit,
           actorUserId: context.get("user").id,
         });
         if (!companyExists) return apiError(context, 404, "not_found");
-        return context.json({ parkLimit: body.value.parkLimit }, 200);
+        return context.json({ parkLimit }, 200);
       })
   );
 }

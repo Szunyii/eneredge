@@ -4,23 +4,33 @@ import { cn } from "cn";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { AccountMenu } from "@/components/account-menu";
 import { Logo } from "@/components/logo";
+import { OrgSwitcher } from "@/components/org-switcher";
+import { useCurrentUser } from "@/components/require-auth";
 import { hu } from "@/i18n/hu";
 
 type AppShellProps = {
-  /** The company whose pages are shown; it is part of every link. */
-  orgSlug: string;
+  /** The company whose pages are shown; its sections make up the navigation. */
+  organizationSlug: string | undefined;
   children: ReactNode;
 };
 
-/** The frame around every page of a company: brand, main navigation, content. */
-export function AppShell({ orgSlug, children }: AppShellProps) {
+/** The frame around every page of the app: brand, navigation, company, account, content. */
+export function AppShell({ organizationSlug, children }: AppShellProps) {
+  const me = useCurrentUser();
   const pathname = usePathname();
-  const sections = [
-    { href: `/o/${orgSlug}/parks`, label: hu.nav.parks },
-    { href: `/o/${orgSlug}/alerts`, label: hu.nav.alerts },
-    { href: `/o/${orgSlug}/settings`, label: hu.nav.settings },
-  ];
+
+  const sections = organizationSlug
+    ? [
+        { href: `/o/${organizationSlug}/parks`, label: hu.nav.parks },
+        { href: `/o/${organizationSlug}/alerts`, label: hu.nav.alerts },
+        { href: `/o/${organizationSlug}/settings`, label: hu.nav.settings },
+      ]
+    : [];
+  if (me.user.isPlatformAdmin) sections.push({ href: "/admin", label: hu.nav.admin });
+
+  const homeHref = organizationSlug ? `/o/${organizationSlug}/parks` : "/";
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -28,11 +38,11 @@ export function AppShell({ orgSlug, children }: AppShellProps) {
         {/* On a narrow screen the navigation wraps onto a second row under the brand. */}
         <div className="mx-auto flex w-full max-w-[1200px] flex-wrap items-center gap-x-6 px-5 sm:px-8">
           <Link
-            href={`/o/${orgSlug}/parks`}
+            href={homeHref}
             aria-label={hu.nav.home}
             className="press flex h-14 items-center rounded-lg"
           >
-            <Logo />
+            <Logo compact />
           </Link>
           <nav aria-label={hu.nav.main} className="max-md:order-last max-md:w-full max-md:pb-2">
             <ul className="-mx-2 flex items-center gap-1 overflow-x-auto px-2">
@@ -48,6 +58,10 @@ export function AppShell({ orgSlug, children }: AppShellProps) {
               ))}
             </ul>
           </nav>
+          <div className="ml-auto flex min-w-0 items-center gap-3">
+            <OrgSwitcher organizations={me.organizations} currentSlug={organizationSlug} />
+            <AccountMenu user={me.user} />
+          </div>
         </div>
       </header>
       <main className="mx-auto w-full max-w-[1200px] flex-1 px-5 py-8 sm:px-8">{children}</main>

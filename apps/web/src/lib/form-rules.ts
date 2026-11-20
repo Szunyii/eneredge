@@ -18,6 +18,29 @@ export const newPassword = z
 
 export const enteredPassword = z.string().min(1, hu.fieldErrors.required);
 
+export const parkName = requiredText.max(80, hu.fieldErrors.too_long);
+
+/** A number as people type it here: "47,4979" and "47.4979" mean the same. */
+export function parseDecimal(text: string): number {
+  return Number(text.trim().replace(",", "."));
+}
+
+/** The same number the way it is written in Hungarian: with a decimal comma. */
+export function formatDecimal(value: number): string {
+  return value.toLocaleString("hu-HU", { maximumFractionDigits: 6, useGrouping: false });
+}
+
+/** A coordinate typed as text: a number within the given degrees. */
+export function coordinate(min: number, max: number) {
+  return requiredText
+    .refine((text) => Number.isFinite(parseDecimal(text)), hu.fieldErrors.invalid)
+    .refine((text) => {
+      const degrees = parseDecimal(text);
+      // "Not a number" is already reported above; it is not also out of range.
+      return !Number.isFinite(degrees) || (degrees >= min && degrees <= max);
+    }, hu.fieldErrors.out_of_range);
+}
+
 /** A company's identifier in addresses: the same rule the server enforces. */
 export const organizationSlug = z
   .string()
