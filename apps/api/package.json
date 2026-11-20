@@ -2,7 +2,12 @@
   "name": "@eneredge/api",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/contract.ts"
+  },
   "scripts": {
+    "dev": "bun --env-file=../../.env --hot src/index.ts",
+    "start": "bun src/index.ts",
     "check": "bun check"
   },
   "dependencies": {

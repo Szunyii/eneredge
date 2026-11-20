@@ -6,11 +6,11 @@ const DATABASE_TIMEOUT_MS = 2000;
 
 /** GET /api/health — for the uptime check: is the process up and can it reach the database? */
 export function healthRoutes(deps: { db: Db }) {
-  return new Hono().get("/", async (c) => {
+  return new Hono().get("/", async (context) => {
     if (await databaseAnswers(deps.db)) {
-      return c.json({ status: "ok", db: "ok" } as const, 200);
+      return context.json({ status: "ok", db: "ok" } as const, 200);
     }
-    return c.json({ status: "degraded", db: "down" } as const, 503);
+    return context.json({ status: "degraded", db: "down" } as const, 503);
   });
 }
 

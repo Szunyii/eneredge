@@ -56,7 +56,8 @@ export function loadEnv(source: Source = process.env): Env {
   };
 
   const NODE_ENV = oneOf("NODE_ENV", ["development", "test", "production"] as const, "development");
-  const PORT = integer("PORT", 0, 65535) ?? 3000;
+  // The web app owns port 3000 (APP_URL); the API sits behind it.
+  const PORT = integer("PORT", 0, 65535) ?? 3001;
 
   let APP_URL = "http://localhost:3000";
   const appUrl = read("APP_URL");

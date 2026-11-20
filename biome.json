@@ -12,7 +12,10 @@
       "!**/migrations",
       "!**/components/ui",
       "!packages/db/src/schema/auth.ts",
-      "!**/dist"
+      "!**/dist",
+      "!**/*.svg",
+      "!**/AGENTS.md",
+      "!**/.next"
     ]
   },
   "formatter": {

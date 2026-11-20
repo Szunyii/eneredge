@@ -15,11 +15,11 @@ export type FieldErrorCode = "required" | "too_long" | "out_of_range" | "invalid
 export type ApiErrorBody = { error: ApiErrorCode; fields?: Record<string, FieldErrorCode> };
 
 export function apiError(
-  c: Context,
+  context: Context,
   status: 400 | 401 | 403 | 404 | 409 | 500,
   code: ApiErrorCode,
   fields?: Record<string, FieldErrorCode>,
 ): Response {
   const body: ApiErrorBody = fields ? { error: code, fields } : { error: code };
-  return c.json(body, status);
+  return context.json(body, status);
 }

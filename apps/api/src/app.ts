@@ -16,11 +16,11 @@ export function createApp(deps: AppDeps) {
 
   const app = new Hono().route("/api", api);
 
-  app.notFound((c) => apiError(c, 404, "not_found"));
-  app.onError((error, c) => {
+  app.notFound((context) => apiError(context, 404, "not_found"));
+  app.onError((error, context) => {
     // The cause goes to the log; the client only learns that something broke.
     console.error(error);
-    return apiError(c, 500, "internal");
+    return apiError(context, 500, "internal");
   });
 
   return app;

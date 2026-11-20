@@ -6,11 +6,12 @@ import { join } from "node:path";
 import { loadEnv } from "../src/env.ts";
 import { createMailer, createMemoryMailer } from "../src/mail.ts";
 
-const base = { DATABASE_URL: "postgres://x/y", AUTH_SECRET: "s".repeat(32) };
+// The smallest configuration that loads: everything else has a default.
+const minimal = { DATABASE_URL: "postgres://x/y", AUTH_SECRET: "s".repeat(32) };
 
 test("file transport appends one JSON line per message", async () => {
   const file = join(tmpdir(), `eneredge-mail-${randomUUID()}.jsonl`);
-  const mailer = createMailer(loadEnv({ ...base, MAIL_TRANSPORT: "file", MAIL_FILE: file }));
+  const mailer = createMailer(loadEnv({ ...minimal, MAIL_TRANSPORT: "file", MAIL_FILE: file }));
   await mailer.send({ to: "a@x.hu", subject: "Első", text: "egy" });
   await mailer.send({ to: "b@x.hu", subject: "Második", text: "kettő" });
 
@@ -31,7 +32,7 @@ test("memory mailer collects messages", async () => {
 test("log transport prints the recipient, the subject and the text", async () => {
   const printed = spyOn(console, "log").mockImplementation(() => {});
   try {
-    await createMailer(loadEnv(base)).send({
+    await createMailer(loadEnv(minimal)).send({
       to: "a@x.hu",
       subject: "Erősítsd meg a címed",
       text: "http://localhost:3000/verify?token=abc",
