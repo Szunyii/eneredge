@@ -1,0 +1,97 @@
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { type Db, invitations, signupAllowlist } from "@eneredge/db";
+import { type BetterAuthOptions, betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware } from "better-auth/api";
+import { organization } from "better-auth/plugins";
+import type { AppDeps } from "./app.ts";
+import type { Env } from "./env.ts";
+import type { Mailer } from "./mail.ts";
+import { passwordResetMail, verificationMail } from "./mail-templates.ts";
+
+/**
+ * Everything about sign-in that does not need a database: how accounts work and
+ * which mails go out. The schema generator (auth.cli.ts) reads these options too.
+ */
+export function authOptions(deps: { env: Env; mailer: Mailer }) {
+  const { env, mailer } = deps;
+
+  return {
+    appName: "EnerEdge",
+    baseURL: env.APP_URL,
+    secret: env.AUTH_SECRET,
+    trustedOrigins: [env.APP_URL],
+    emailAndPassword: {
+      enabled: true,
+      // No session before the address is confirmed.
+      requireEmailVerification: true,
+      minPasswordLength: 10,
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({ user, token }) => {
+        // The link opens the web app's own page, which then posts the new password.
+        const url = `${env.APP_URL}/reset-password?token=${encodeURIComponent(token)}`;
+        // Not awaited: the response time must not tell whether the address has an account.
+        void mailer.send(passwordResetMail({ to: user.email, name: user.name, url }));
+      },
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url }) => {
+        void mailer.send(verificationMail({ to: user.email, name: user.name, url }));
+      },
+    },
+    plugins: [organization()],
+  } satisfies BetterAuthOptions;
+}
+
+/** The auth instance of a running app: the options above, stored in our database. */
+export function createAuth(deps: AppDeps) {
+  return betterAuth({
+    ...authOptions(deps),
+    database: drizzleAdapter(deps.db, { provider: "pg" }),
+    hooks: {
+      // Sign-up by invitation only: refuse before anything happens, with a code the
+      // sign-up page can explain. (That sign-up is closed is no secret.)
+      before: createAuthMiddleware(async (context) => {
+        if (context.path !== "/sign-up/email") return;
+        const email: unknown = context.body?.email;
+        if (typeof email === "string" && !(await maySignUp(deps.db, deps.env, email))) {
+          throw signUpClosed();
+        }
+      }),
+    },
+    databaseHooks: {
+      user: {
+        create: {
+          // The same rule once more where accounts are actually created, so that no
+          // other endpoint, now or later, can get around the allowlist.
+          before: async (user) => {
+            if (!(await maySignUp(deps.db, deps.env, user.email))) throw signUpClosed();
+          },
+        },
+      },
+    },
+  });
+}
+
+export type Auth = ReturnType<typeof createAuth>;
+
+/**
+ * In `allowlist` mode only three kinds of address may create an account:
+ * allowlisted ones, ones holding a pending invitation, and platform admins.
+ */
+async function maySignUp(db: Db, env: Env, email: string): Promise<boolean> {
+  if (env.SIGNUP_MODE === "open") return true;
+
+  const address = email.trim().toLowerCase();
+  if (env.PLATFORM_ADMIN_EMAILS.includes(address)) return true;
+  if (await signupAllowlist.has(db, address)) return true;
+  return invitations.hasPendingFor(db, address);
+}
+
+function signUpClosed() {
+  return new APIError("FORBIDDEN", {
+    code: "SIGNUP_CLOSED",
+    message: "Sign-up is by invitation only.",
+  });
+}

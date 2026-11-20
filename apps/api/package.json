@@ -11,8 +11,10 @@
     "check": "bun check"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "1.7.26",
     "@eneredge/db": "workspace:*",
     "@hono/zod-validator": "^0.9.1",
+    "better-auth": "1.7.26",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.19",
     "nodemailer": "^10.6.1",

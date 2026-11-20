@@ -1,9 +1,12 @@
 import type { Db } from "@eneredge/db";
 import { Hono } from "hono";
+import { createAuth } from "./auth.ts";
 import type { Env } from "./env.ts";
 import { apiError } from "./errors.ts";
 import type { Mailer } from "./mail.ts";
+import { adminRoutes } from "./routes/admin.ts";
 import { healthRoutes } from "./routes/health.ts";
+import { meRoutes } from "./routes/me.ts";
 
 export type AppDeps = { db: Db; env: Env; mailer: Mailer };
 
@@ -12,9 +15,17 @@ export type AppDeps = { db: Db; env: Env; mailer: Mailer };
  * to the typed client of the web app.
  */
 export function createApp(deps: AppDeps) {
-  const api = new Hono().route("/health", healthRoutes(deps));
+  const auth = createAuth(deps);
 
-  const app = new Hono().route("/api", api);
+  const api = new Hono()
+    .route("/health", healthRoutes(deps))
+    .route("/me", meRoutes(deps, auth))
+    .route("/admin", adminRoutes(deps, auth));
+
+  const app = new Hono()
+    // Sign-up, sign-in, sessions, companies and invitations are the auth library's own endpoints.
+    .on(["GET", "POST"], "/api/auth/*", (context) => auth.handler(context.req.raw))
+    .route("/api", api);
 
   app.notFound((context) => apiError(context, 404, "not_found"));
   app.onError((error, context) => {
