@@ -7,6 +7,7 @@ import type { Mailer } from "./mail.ts";
 import { adminRoutes } from "./routes/admin.ts";
 import { healthRoutes } from "./routes/health.ts";
 import { meRoutes } from "./routes/me.ts";
+import { parkRoutes } from "./routes/parks.ts";
 
 export type AppDeps = { db: Db; env: Env; mailer: Mailer };
 
@@ -20,7 +21,8 @@ export function createApp(deps: AppDeps) {
   const api = new Hono()
     .route("/health", healthRoutes(deps))
     .route("/me", meRoutes(deps, auth))
-    .route("/admin", adminRoutes(deps, auth));
+    .route("/admin", adminRoutes(deps, auth))
+    .route("/orgs/:orgSlug/parks", parkRoutes(deps, auth));
 
   const app = new Hono()
     // Sign-up, sign-in, sessions, companies and invitations are the auth library's own endpoints.

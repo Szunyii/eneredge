@@ -8,3 +8,9 @@ export type Db = BunSQLDatabase<typeof schema> & { $client: SQL };
 export function createDb(url: string): Db {
   return drizzle({ client: new SQL(url), schema, casing: "snake_case" });
 }
+
+/** The handle a `db.transaction(...)` callback receives. */
+export type Transaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/** Whatever can run a query: the database itself, or a transaction on it. */
+export type QueryRunner = Db | Transaction;

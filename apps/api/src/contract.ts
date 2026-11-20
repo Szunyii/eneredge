@@ -4,4 +4,9 @@ export type { AppType } from "./app.ts";
 export type { ApiErrorBody, ApiErrorCode, FieldErrorCode } from "./errors.ts";
 export type { Me } from "./routes/me.ts";
 
-export type ParkStatus = "draft" | "connecting" | "online" | "degraded" | "offline";
+export type { ParkDto } from "./routes/parks.ts";
+
+import type { ParkDto } from "./routes/parks.ts";
+
+/** draft · connecting · online · degraded · offline — the states a park can be in. */
+export type ParkStatus = ParkDto["status"];
